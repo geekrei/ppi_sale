@@ -1,0 +1,162 @@
+<odoo>
+	<data>
+
+		<record model="ir.ui.view" id="view_ppi_sale_estimate_tree">
+			<field name="name">ppi.sale.estimate.tree</field>
+			<field name="model">ppi.sale.estimate</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name"/>
+					<field name="customer_id"/>
+					<field name="project_title"/>
+					<field name="state"/>
+				</tree>
+			</field>
+		</record>
+
+		<record id="view_ppi_sale_estimate_form" model="ir.ui.view">
+            <field name="name">ppi.sale.estimate.form</field>
+            <field name="model">ppi.sale.estimate</field>
+            <field eval="25" name="priority"/>
+            <field name="arch" type="xml">
+                <form string="Request for Estimates" >
+                 <header>
+                    <button name="confirm_estimate" states="draft" string="Confirm" type="object" class="oe_highlight"/>
+                    <button name="validate_estimate" states="confirm" string="Validate" type="object" class="oe_highlight" groups="sales_team.group_sale_manager"/>
+                    <button name="action_create_sales_quote" states="validate" string="Create Quote" type="object" class="oe_highlight" />
+                    <button name="cancel_estimate" states="confirm" string="Cancel" type="object" groups="sales_team.group_sale_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,validate"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="customer_id"/>
+                            <field name="mailing_address"/>
+                        </group>
+                        <group>
+                            <field name="project_title"/>
+                            <field name="jobsite_address" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="DETAILS">
+
+                        	<group>
+                        		<field name="product_id"/>
+                        	</group>
+                            <group>
+                            	<group>
+                            		<field name="panel_thickness"/>
+                            	</group>
+                            	<group>
+                            		<field name="bended_thickness"/>
+                            	</group>
+                             </group>
+
+                             <div>
+                             	<label for="stainless_application_thickness"/>
+                             	<field name="stainless_application_thickness"/>
+                             </div>
+
+                             <div>
+                             	<label for="insulation_specification"/>
+                             	<field name="insulation_specification"/>
+                             </div>
+
+                             <group>	                                
+                             	<group>
+                             		<field name="insulation_over_the_purlin_laying"/>
+                             		<field name="insulation_under_the_purlin_laying"/>
+                             	</group>
+                             	<group>
+                             		<field name="insulation_fiberglass_density"/>
+                             	</group>
+                             </group>
+
+                             <div>
+                             	<label for="skylight_specification"/>
+                             	<field name="skylight_specification"/>
+                             </div>
+
+                             <div>
+                             	<label for="special_coating_requirement"/>
+                             	<field name="special_coating_requirement"/>
+                             </div>
+
+                            <div>
+                            	<label for="other_requirements"/>
+                            	<field name="other_requirements"/>
+                            </div>
+                           
+                            <group string="Price Assumption">
+                            	<field name="price_panel"/>
+                            	<field name="price_bended"/>
+                            	<field name="price_stainless"/>
+                            	<field name="insulation_dicount_rate"/>
+                            	<field name="hardware_discount_rate"/>
+                            	<field name="labor_discount_rate"/>
+                            </group>
+
+                        </page>
+                        <page string="OTHER INFO">
+                        	<group>
+	                            <group>
+	                                <field name="filed_by" />
+	                                <field name="filed_date" />
+	                            </group>
+	                            <group>
+	                                <field name="approved_by" />
+	                            </group>
+	                        </group>
+                        </page>
+                    </notebook>
+                    
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="ppi_sale_estimate_view_search" model="ir.ui.view">
+            <field name="name">ppi.sale.estimate.search</field>
+            <field name="model">ppi.sale.estimate</field>
+            <field name="priority" eval="8" />
+            <field name="arch" type="xml">
+                <search string="Request for Estimate">
+                    <field name="name" />
+                    <filter domain="[('state', '=', 'draft')]" string="To Confirm" name="to_report" help="New Estimate"/>
+                    <filter domain="[('state', '=', 'confirm')]" string="To Validate" name="to_approve" help="Confirmed Estimate"/>
+                    <filter domain="[('state', '=', 'validate')]" string="Approved" name="approved" help="Approved Estimate"/>
+                    <filter domain="[('state', '=', 'cancel')]" string="Canceled" name="cancel" help="Canceled Estimate"/>
+                    <filter domain="[('state', '!=', 'cancel')]" string="Not Canceled" name="uncanceled" help="Actual Estimate, not the canceled ones"/>
+                </search>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="ppi_sale_estimate_action">
+            <field name="name">Estimates</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">ppi.sale.estimate</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="ppi_sale_estimate_view_search" />
+            <field name="help" type="html">
+              <p>
+                Create your Request for Estimate.
+              </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_ppi_sale_estimate" name="Estimates" parent="sale.sale_order_menu" action="ppi_sale_estimate_action" groups="sales_team.group_sale_salesman" sequence="0" />
+
+	</data>
+</odoo>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+<template id="report_ppi_sale_estimate_document">
+	<t t-call="web.external_layout">
+		<!-- <t t-set="o" t-value="o.with_context({'lang':o.partner_id.lang})"/> -->
+		<div class="page">
+			<div class="row">
+				<div class="text-center">
+					<h3>
+						<span>REQUEST FOR ESTIMATE</span>
+					</h3>
+				</div>
+			</div>
+			
+			<div class="row">
+				<div class="col-xs-12 text-right" t-if="o.name">
+					<h5><strong>RFE No: </strong><span t-field="o.name"/></h5>
+				</div>           
+			</div>
+						
+			<br/>
+
+			<!-- <p t-if="o.payment_type == 'inbound' and o.state == 'posted'">
+				Received from <strong> <span t-field="o.partner_id.name" /> </strong> with TIN <strong> <span t-field="o.partner_id.x_tin" /> </strong> and address at <strong> <span t-esc="o.partner_id.contact_address" /> </strong>, the sum of <strong> <span t-field="o.check_amount_in_words" /> </strong> (<strong> <span t-esc="o.amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}' /> </strong>) in partial/full payment of our Invoice/Statement as indicated.
+			</p> -->
+
+			<div class="row" style="font-size: 16px">
+				<strong>Customer/Contractor: </strong><span t-field="o.customer_id"/>
+			</div>
+
+			<div class="row" style="font-size: 16px">
+				<strong>Complete Mailing Address: </strong><span t-field="o.mailing_address"/>
+			</div>
+
+			<div class="row" style="font-size: 16px">
+				<strong>Project Title: </strong><span t-field="o.project_title"/>
+			</div>
+
+			<div class="row" style="font-size: 16px">
+				<strong>Complete Jobsite Address: </strong><span t-field="o.jobsite_address"/>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>Product Profile(s): </strong><span t-field="o.product_id"/>
+			</div>
+
+			<div class="row" style="font-size: 16px">
+				<div class="col-xs-6">
+					<strong>Thickness for Panel: </strong>
+					<span t-field="o.panel_thickness"/><br/>
+				</div>
+				<div class="col-xs-6">
+					<strong>Thickness for Bended: </strong>
+					<span t-field="o.bended_thickness"/>
+				</div>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>If project requires STAINLESS, specify application (bended) and thickness: </strong><br/>
+				<span t-field="o.stainless_application_thickness"/>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>If project requires INSULATION, specify complete specification: </strong><br/>
+				<span t-field="o.insulation_specification"/>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>Method of laying of insulation: </strong><br/>
+				<input type="checkbox" checked="o.insulation_over_the_purlin_laying"/> Over the Purlin Laying
+				<!-- <span t-field="o.panel_thickness"/> Over the Purlin Laying -->
+				<input type="checkbox" checked="o.insulation_under_the_purlin_laying"/> Under the Purlin Laying
+
+			</div>
+
+			<div class="row" style="font-size: 16px">
+				<strong>For fiberglass insulation, indicate density: </strong>
+				<span t-field="o.insulation_fiberglass_density"/>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>If project requires SKYLIGHT specify complete specification: </strong>
+				<span t-field="o.skylight_specification"/>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>Specify if special coating requirement: </strong>
+				<span t-field="o.special_coating_requirement"/>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>If offer is not pricing, indicate price assumption: </strong><br/>
+				<div class="col-xs-10 pull-right">
+					<strong>Panel: Cost per metric ton or cost per meter or discount rate: </strong>
+					<span t-field="o.price_panel"/><br/>
+					<strong>Bended: Cost per metric ton or cost per meter or discount rate: </strong>
+					<span t-field="o.price_bended"/><br/>
+					<strong>Stainless: Cost per metric pr cost per meter or discount rate: </strong>
+					<span t-field="o.price_stainless"/><br/>
+					<strong>Insulation: Discount Rate: </strong>
+					<span t-field="o.insulation_dicount_rate"/><br/>
+					<strong>Hardware: Discount Rate: </strong>
+					<span t-field="o.hardware_discount_rate"/><br/>
+					<strong>Labor: Discount Rate per Work Scope: </strong>
+					<span t-field="o.labor_discount_rate"/><br/>
+				</div>
+			</div>
+
+			<br/>
+
+			<div class="row" style="font-size: 16px">
+				<strong>Other Requirements: </strong>
+				<span t-field="o.other_requirements"/>
+			</div>
+						
+			<br/>
+			<br/>
+
+			<div style="position: absolute; top: 900px; width: 100%">
+				<div class="col-xs-6">
+					<strong>Filed By: </strong>
+					<span t-field="o.filed_by"/><br/>
+					<strong>Filed Date: </strong>
+					<span t-field="o.filed_date"/>                    
+				</div>
+				<div class="col-xs-6 pull-right">
+					<strong>Noted / Approved By: </strong>
+					<span t-field="o.approved_by"/>                    
+				</div>
+			</div>
+			
+		</div>
+	</t>
+</template>
+
+<template id="report_ppi_sale_estimate">
+	<t t-call="web.html_container">
+		<t t-foreach="docs" t-as="o">
+			<t t-call="ppi_sale.report_ppi_sale_estimate_document" />
+		</t>
+	</t>
+</template>
+
+<report id="ppi_sale_estimate" model="ppi.sale.estimate" string="Sale Estimate Report" report_type="qweb-pdf" name="ppi_sale.report_ppi_sale_estimate" file="ppi_sale.report_ppi_sale_estimate" attachment_use="True" attachment="(object.state in ('confirm','validate')) and ('RFE'+(object.name or '').replace('/','')+'.pdf')"/>
+
+</data>
+</odoo>
