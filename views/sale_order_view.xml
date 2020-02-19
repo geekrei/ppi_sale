@@ -1,73 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
 	<data>
+		<record id="view_order_form_extend" model="ir.ui.view">
+			<field name="name">sale.order.form.extend</field>
+			<field name="model">sale.order</field>
+			<field name="inherit_id" ref="sale.view_order_form" />
+			<field name="arch" type="xml">
+				<!-- UNCOMMENT -->
+				<xpath expr="//form/header" position="inside">
+					<button name="%(quotation_pay_action)d" id="quotation_pay_action" string="Register Payment" class="btn-primary" type="action" attrs="{'invisible': [('state', 'not in', ['sent'])]}"/>
+					<button name="%(quotation_pay_action)d" string="Register Payment" type="action" attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
+					<button name="action_compute_delivery" string="Compute Delivery" type="object" groups="base.group_no_one" class="btn-danger"/>
+					<button name="action_unlock" type="object" string="Unlock" states="done" groups="sales_team.group_sale_manager"/>
+				</xpath>
 
-		<record id="view_sale_order_form_extend" model="ir.ui.view">
-            <field name="name">sale.order.form.extend</field>
-            <field name="model">sale.order</field>
-            <field name="inherit_id" ref="sale.view_order_form" />
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='pricelist_id']" position="after">
-                    <!-- <field name="quote_state" invisible="1"/> -->
-                    <field name="validate_sale_head" invisible="1"/>
-                    <field name="validate_president" invisible="1"/>
-                </xpath>
+				<xpath expr="//field[@name='origin']" position="before">
+					<field name="repair_id"/>
+					<field name="is_delivered_manual_override" groups="base.group_no_one"/>
+				</xpath>
 
-                <xpath expr="//header" position="replace">
-                    <header>
-                        <button name="action_quotation_send" string="Send by Email" type="object" states="draft" class="btn-primary"/>
-                        <button name="action_quotation_send" type="object" string="Send PRO-FORMA Invoice" groups="sale.group_proforma_sales" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('invoice_count','&gt;=',1)]}" context="{'proforma': True}"/>
-                        <button name="print_quotation" string="Print" type="object" states="draft" class="btn-primary o_sale_print"/>
-                        <button name="action_confirm" id="action_confirm"
-                            string="Confirm Sale" class="btn-primary" type="object"
-                            attrs="{'invisible': [('state', 'not in', ['validate3'])]}"/>
-                        <button name="action_confirm"
-                            string="Confirm Sale" type="object"
-                            attrs="{'invisible': [('state', 'not in', ['draft','validate3'])]}"/>
-                        <button name="action_quotation_send" type="object" string="Send PRO-FORMA Invoice" groups="sale.group_proforma_sales" attrs="{'invisible': ['|', ('state', '=', 'draft'), ('invoice_count','&gt;=',1)]}" context="{'proforma': True}"/>
-                        <button name="print_quotation" string="Print" type="object" states="sent,validate1,validate2,validate3,sale" class="o_sale_print"/>
-                        <button name="action_quotation_send" string="Send by Email" type="object" states="sent,validate1,validate2,validate3,sale"/>
-                        <button name="action_cancel" states="draft,sent,sale" type="object" string="Cancel"/>
-                        <button name="action_draft" states="cancel" type="object" string="Set to Quotation"/>
-                        <button name="action_done" type="object" string="Lock" states="sale"
-                            help="If the sale is locked, you can not modify it anymore. However, you will still be able to invoice or deliver."/>
-                        <button name="action_unlock" type="object" string="Unlock" states="done" groups="sales_team.group_sale_manager"/>
-                        <field name="state" widget="statusbar" statusbar_visible="draft,sent,validate1,validate2,validate3,sale"/>
-                    </header>
-                </xpath>
-                <xpath expr="//button[@name='action_cancel']" position="attributes">
-                    <attribute name="states"></attribute>
-                    <attribute name="attrs">{'invisible':[('state','not in', ('draft','sent','validate1','validate2','validate3','sale'))]}</attribute>
-                </xpath>
-                <xpath expr="//header" position="inside">
-                    <button name="action_validate1" string="Validate" type="object" attrs="{'invisible': ['|',('state', 'not in', ['draft','sent'])]}" groups="ppi_sale.group_technical_supervisor"/>
-                    <button name="action_validate2" string="Validate" type="object" attrs="{'invisible': [('state', 'not in', ['validate1'])]}" groups="sales_team.group_sale_manager"/>
-                    <button name="action_validate_sale_head" string="Validate" type="object" attrs="{'invisible': [('validate_sale_head', '=', False)]}" groups="ppi_sale.group_sales_head"/>
-                    <button name="action_validate_president" string="Validate" type="object" attrs="{'invisible': [('validate_president', '=', False)]}" groups="ppi_sale.group_sales_president"/>
+				<xpath expr="//field[@name='company_id']" position="after">
+					<field name="partner_bank_id" domain="[('company_id', '=', company_id)]"/>
+				</xpath>
+				
+				<xpath expr="//field[@name='order_line']/tree/field[@name='layout_category_id']" position="attributes">
+					<attribute name="invisible">1</attribute>
+				</xpath>
 
-                </xpath>
+				<xpath expr="//field[@name='order_line']/tree/field[@name='analytic_tag_ids']" position="attributes">
+					<attribute name="invisible">1</attribute>
+				</xpath>
 
-            	<xpath expr="//field[@name='partner_id']" position="after">
-            		<field name="rfe_id" domain="[('state','=','validate')]"/>
-            	</xpath>
+				<xpath expr="//field[@name='client_order_ref']" position="after">
+					<field name="po_ref"/>
+					<!-- <field name="show_country_origin"/> -->
+					<!-- <field name="delivery_status"/> -->
+				</xpath>
 
-                <xpath expr="//field[@name='order_line']/tree/field[@name='name']" position="after">
-                    <field name="thickness"/>
-                    <field name="bmt"/>
-                    <field name="nom_width"/>
-                    <field name="feed_coil"/>
-                    <field name="m_length"/>
-                    <field name="coating_mass"/>
-                    <field name="color"/>
-                    <field name="fh_cq"/>
-                    <field name="wt"/>
-                    <field name="wt_per_qty"/>
-                    <field name="price_lm"/>
-                    <field name="p_mt"/>
-                    <field name="lm_mt"/>
-                </xpath>
+				<xpath expr="//field[@name='order_line']/tree/field[@name='qty_delivered']" position="after">
+					<field name="delivery_status" invisible="1"/>
+				</xpath>
 
-            </field>
-        </record>
+				<!-- <xpath expr="//field[@name='invoice_status']" position="after">
+					<field name="picking_status"/>
+				</xpath> -->
 
+			</field>
+		</record>
+
+		<record id="view_order_tree_extend" model="ir.ui.view">
+			<field name="name">sale.order.tree.extend</field>
+			<field name="model">sale.order</field>
+			<field name="inherit_id" ref="sale.view_order_tree" />
+			<field name="arch" type="xml">
+
+				<xpath expr="//field[@name='invoice_status']" position="after">
+					<field name="delivery_status"/>
+				</xpath>
+				
+			</field>
+		</record>
 	</data>
 </odoo>

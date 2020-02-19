@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<!-- HIDE EDIT BUTTON FOR OFFICE ASSISTANT SINCE USER SHOULD HAVE WRITE ACCESS TO MODEL TO ATTACH FILES -->
+		<!-- CUSTOMER INVOICE -->
+		<record id="invoice_tree_extend_disable_create" model="ir.ui.view">
+			<field name="name">account.invoice.tree.extend.disable.edit.</field>
+			<field name="model">account.invoice</field>
+			<field name="inherit_id" ref="account.invoice_tree" />
+			<field name="groups_id" eval="[(4,ref('innosen_custom.group_account_office_assistant'))]"/>
+			<field name="arch" type="xml">
+				<xpath expr="/tree" position="attributes">
+					<attribute name="create">false</attribute>
+				</xpath>
+			</field>
+		</record>
+		<record id="invoice_kanban_extend_disable_create" model="ir.ui.view">
+			<field name="name">account.invoice.kanban.extend.disable.edit.</field>
+			<field name="model">account.invoice</field>
+			<field name="inherit_id" ref="account.invoice_kanban" />
+			<field name="groups_id" eval="[(4,ref('innosen_custom.group_account_office_assistant'))]"/>
+			<field name="arch" type="xml">
+				<xpath expr="/kanban" position="attributes">
+					<attribute name="create">false</attribute>
+				</xpath>
+			</field>
+		</record>
+		<record id="invoice_form_extend_disable_edit" model="ir.ui.view">
+			<field name="name">account.invoice.form.extend.disable.edit.</field>
+			<field name="model">account.invoice</field>
+			<field name="inherit_id" ref="account.invoice_form" />
+			<field name="groups_id" eval="[(4,ref('innosen_custom.group_account_office_assistant'))]"/>
+			<field name="arch" type="xml">
+				<xpath expr="/form" position="attributes">
+					<attribute name="create">false</attribute>
+					<attribute name="edit">false</attribute>
+				</xpath>
+			</field>
+		</record>
+		<!-- VENDOR BILL -->
+		<!-- <record id="invoice_supplier_form_extend_disable_edit" model="ir.ui.view">
+			<field name="name">account.invoice.supplier.form.extend.disable.edit.</field>
+			<field name="model">account.invoice</field>
+			<field name="inherit_id" ref="account.invoice_supplier_form" />
+			<field name="groups_id" eval="[(4,ref('innosen_custom.group_account_office_assistant'))]"/>
+			<field name="arch" type="xml">
+				<xpath expr="/form" position="attributes">
+					<attribute name="edit">false</attribute>
+				</xpath>
+			</field>
+		</record> -->
+
+		<!-- CUSTOMER INVOICE -->
+		<record id="invoice_form_extend" model="ir.ui.view">
+			<field name="name">account.invoice.form.extend</field>
+			<field name="model">account.invoice</field>
+			<field name="inherit_id" ref="account.invoice_form" />
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='date_invoice']" position="after">
+					<field name="payment_via_id"/>
+				</xpath>
+				<xpath expr="//field[@name='fiscal_position_id']" position="before">
+					<field name="intrastat_country_id"/>
+				</xpath>
+				<xpath expr="//field[@name='date_due']" position="before">
+					<field name="partner_shipping_by_id"/>
+					<field name="partner_bank_id"/>
+					<field name="show_country_origin"/>
+					<field name="related_delivery_ref"/>
+				</xpath>
+				<xpath expr="//notebook/page[2]" position="after">
+					<page string="Payments">
+						<field name="payment_ids"/>
+					</page>
+				</xpath>
+				<!-- <xpath expr="//field[@name='origin']" position="after">
+					<field name="related_delivery_ref"/>
+				</xpath> -->
+
+				<!-- INVOICE LINE -->
+				<xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='name']" position="after">
+					<field name="notes"/>
+				</xpath>
+			</field>
+		</record>
+
+		
+	</data>
+</odoo>

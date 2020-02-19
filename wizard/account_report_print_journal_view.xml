@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account.action_account_print_journal_menu" model="ir.actions.act_window">
+        <field name="name">Journals</field>
+    </record>
+
+    <record id="account_report_print_journal_view_extend" model="ir.ui.view">
+        <field name="name">account.report.print.journal.view.extend</field>
+        <field name="model">account.print.journal</field>
+        <field name="inherit_id" ref="account.account_report_print_journal_view"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='sort_selection']" position="after">
+                    <field name="report_format" widget="radio"/>
+                    <field name="company_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='journal_ids']" position="attributes">
+                    <attribute name="domain">[('company_id', '=', company_id)]</attribute>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
+    <!-- COMMENT ON DEPLOYMENT -->
+    <!-- <menuitem id="menu_print_journal_new" name="Sale/Purchase Journal" parent="account.menu_finance_legal_statement" action="account.action_account_print_journal_menu" groups="account.group_account_manager,account.group_account_user" /> -->
+    
+
+</odoo>

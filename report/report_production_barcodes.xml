@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_production_barcodes_document">
+            <t t-call="report.external_layout">
+                <div class="page">
+                    <br/>
+                    <h3>
+                        <span t-field="o.name"/>
+                    </h3>
+                    <br/>
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Lot/Serial Number</th>
+                                <th>Barcode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.move_finished_ids" t-as="move_finished">
+                                <tr t-foreach="move_finished.move_lot_ids" t-as="lot">
+                                    <td>
+                                       <span  t-field="move_finished.product_id.name"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="lot.lot_id.name"/>
+                                    </td>
+                                    <td>
+                                        <img t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', lot.lot_id.name, 600, 100)" style="width:300px;height:50px"/>
+                                    </td>
+                                </tr>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </template>
+
+        <template id="report_production_barcodes">
+            <t t-call="report.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="innosen_custom.report_production_barcodes_document"/>
+                </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>

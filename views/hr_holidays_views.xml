@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<record id="view_hr_holidays_search" model="ir.ui.view">
+			<field name="name">hr.holidays.view.inherit.omni</field>
+			<field name="model">hr.holidays</field>
+			<field name="inherit_id" ref="hr_holidays.view_hr_holidays_filter"/>
+			<field name="arch" type="xml">
+				<filter name="year" position="replace"/>
+				<xpath expr="//search" position="inside">
+					<filter name="this_year" string="This Year" domain="[('date_from','&lt;=', time.strftime('%%Y-12-31')),('date_from','&gt;=',time.strftime('%%Y-01-01'))]"/>
+					<filter name="active_employee" string="Active Employees" domain="[('employee_id.active', '=', True)]" help="Displays leaves and allocations for active employees only."/>
+				</xpath>
+			</field>
+		</record>
+
+		<record id="view_public_holidays_tree_inherit" model="ir.ui.view">
+			<field name="name">hr.holidays.public.tree.inherit</field>
+			<field name="model">hr.holidays.public</field>
+			<field name="inherit_id" ref="hr_public_holidays.view_public_holidays_tree"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='year']" position="attributes">
+					<attribute name="widget">statinfo</attribute>
+				</xpath>
+			</field>
+		</record>
+
+		<record id="view_public_holidays_form_inherit" model="ir.ui.view">
+			<field name="name">hr.holidays.public.form.inherit</field>
+			<field name="model">hr.holidays.public</field>
+			<field name="inherit_id" ref="hr_public_holidays.view_public_holidays_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='year']" position="attributes">
+					<attribute name="widget">char</attribute>
+				</xpath>
+			</field>
+		</record>
+
+		<!-- Readonly remaining leaves to fix issue on cannot update employee data -->
+		<record id="view_employee_form_leave_inherit_extend" model="ir.ui.view">
+			<field name="name">hr.employee.leave.form.inherit.extend</field>
+			<field name="model">hr.employee</field>
+			<field name="inherit_id" ref="hr_holidays.view_employee_form_leave_inherit"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='remaining_leaves']" position="attributes">
+					<attribute name="readonly">1</attribute>
+				</xpath>
+			</field>
+		</record>
+
+	</data>
+</odoo>

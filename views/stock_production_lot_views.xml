@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_production_lot_form_extend" model="ir.ui.view">
+            <field name="name">stock.production.lot.form.inherit</field>
+            <field name="model">stock.production.lot</field>
+            <field name="inherit_id" ref="stock.view_production_lot_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='ref']" position="after">
+                    <field name="is_migrated" attrs="{'invisible': [('is_migrated', '=', False)]}" groups="base.group_no_one" />
+                    <field name="pre_lot" attrs="{'invisible': [('is_migrated', '=', False)]}" groups="base.group_no_one" />
+                    <field name="instock" groups="base.group_no_one"/> <!-- // DIABLED UNTIL FILTER CONDTION OF SERIAL IS STABILIZED -->
+                </xpath>
+            </field>
+        </record>
+      
+    </data>
+</odoo>

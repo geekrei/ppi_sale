@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="view_move_form_extend" model="ir.ui.view">
+			<field name="name">account.move.form.extend</field>
+			<field name="model">account.move</field>
+			<field name="inherit_id" ref="account.view_move_form" />
+			<field name="arch" type="xml">
+				<xpath expr="//form/header" position="inside">
+					<button name="action_update_partner" string="UPDATE PARTNER" type="object" groups="base.group_no_one" class="btn-danger" />
+				</xpath>
+				<xpath expr="//form/header" position="inside">
+					<button name="update_ref" string="UPDATE REF" type="object" groups="base.group_no_one" class="btn-danger" />
+				</xpath>
+				<xpath expr="//field[@name='line_ids']/tree/field[@name='partner_id']" position="attributes">
+					<attribute name="domain">[]</attribute>
+				</xpath>
+				<xpath expr="//field[@name='line_ids']/tree/field[@name='name']" position="after">
+					<field name="quantity"/>
+				</xpath>
+			</field>
+		</record>
+
+		<record id="view_move_line_form_extend" model="ir.ui.view">
+			<field name="name">account.move.line.form.extend</field>
+			<field name="model">account.move.line</field>
+			<field name="inherit_id" ref="account.view_move_line_form" />
+			<field name="arch" type="xml">
+				<xpath expr="//form/sheet" position="before">
+					<header>
+						<button name="action_compute_residual" string="COMPUTE RESIDUAL" type="object" groups="base.group_no_one" class="btn-danger" />
+					</header>
+				</xpath>
+			</field>
+		</record>
+
+		<record id="action_update_ref" model="ir.actions.server">
+			<field name="name">Update Reference</field>
+			<!-- <field name="type">ir.actions.server</field> -->
+			<!-- <field name="res_model">account.move</field> -->
+			<field name="model_id" ref="account.model_account_move" />
+			<field name="state">code</field>
+			<field name="code">records.update_ref()</field>
+		</record>
+
+		<record id="action_update_ref_value" model="ir.values">
+			<field name="name">Update Reference</field>
+			<field name="model_id" ref="account.model_account_move" />
+			<field name="key">action</field>
+			<field name="key2">client_action_multi</field>
+			<field name="model">account.move</field>
+			<!-- <field name="value" eval="'ir.actions.server,%d'%action_update_ref"/> -->
+			<field name="value" eval="'ir.actions.server,' + str(ref('action_update_ref'))" />
+		</record>
+
+	</data>
+</odoo>

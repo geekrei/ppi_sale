@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="view_server_action_form_template_extend">
+            <field name="name">ir.actions.server.form.extend</field>
+            <field name="model">ir.actions.server</field>
+            <field name="inherit_id" ref="base.view_server_action_form"/>
+            <field name="arch" type="xml">
+                <field name="state" position="after">
+                    <field name="force_send" attrs="{'invisible': [('state', '!=', 'email')]}"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>

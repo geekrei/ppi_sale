@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <delete model="ir.values" search="[('name', '=', 'action_view_tag_multiple_partners')]" />
+        <delete model="ir.values" search="[('name', '=', 'action_purchase_line_product_tree')]" />
+        <delete model="ir.values" search="[('name', '=', 'action_purchase_line_product_product_tree')]" />
+        <delete model="ir.values" search="[('name', '=', 'product_margin_act_window')]" />
+        <delete model="ir.values" search="[('name', '=', 'action_product_allits_boms')]" />
+        <delete model="ir.values" search="[('name', '=', 'act_product_stock_move_open')]" />
+    </data>
+</odoo>

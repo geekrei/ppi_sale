@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_message_form_inherit" model="ir.ui.view">
+            <field name="name">mail.message.form.inherit</field>
+            <field name="model">mail.message</field>
+            <field name="inherit_id" ref="mail.view_message_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_ids']" position="before">
+                    <field name="email_to"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="email_template_form_inherit" model="ir.ui.view">
+            <field name="name">mail.template.form.inherit</field>
+            <field name="model">mail.template</field>
+            <field name="inherit_id" ref="mail.email_template_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='auto_delete']" position="after">
+                    <field name="use_default"/>
+                </xpath>
+            </field>
+        </record>
+
+
+    </data>
+</odoo>

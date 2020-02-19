@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- QWeb Reports -->
+        <!-- attachment="(object.state in ('open','paid')) and ('SHINV'+(object.number or '').replace('/','')+'.pdf')" -->
+
+        <report 
+            id="account_invoices"
+            model="account.invoice"
+            string="Invoices"
+            report_type="qweb-pdf"
+            name="account.report_invoice"
+            file="account.report_invoice"
+            attachment_use="True"
+            paperformat="innosen_custom.paperformat_report_innosen_invoice"
+        />
+
+        <report 
+            id="invoice_shipping"
+            model="account.invoice"
+            string="Shipping invoice"
+            report_type="qweb-pdf"
+            name="innosen_custom.report_invoice_shipping"
+            file="innosen_custom.report_invoice_shipping"
+            attachment_use="True"
+            menu="True"
+            paperformat="innosen_custom.paperformat_report_innosen_invoice"
+        />
+
+        <report
+            id="invoice_proforma"
+            model="sale.order"
+            string="Pro Forma Invoice"
+            report_type="qweb-pdf"
+            name="innosen_custom.report_invoice_proforma"
+            file="innosen_custom.report_invoice_proforma"
+            menu="True"
+            paperformat="innosen_custom.paperformat_report_innosen_invoice"
+        />
+
+        <report
+            id="invoice_proforma_shipping"
+            model="sale.order"
+            string="Pro Forma Invoice (Shipping)"
+            report_type="qweb-pdf"
+            name="innosen_custom.report_invoice_proforma_shipping"
+            file="innosen_custom.report_invoice_proforma_shipping"
+            menu="True"
+            paperformat="innosen_custom.paperformat_report_innosen_invoice"
+        />
+
+        <report
+            id="stock_picking_barcodes"
+            model="stock.picking"
+            string="Picking Lot/Serial Barcodes"
+            report_type="qweb-pdf"
+            name="innosen_custom.report_stock_picking_barcodes"
+            file="innosen_custom.report_stock_picking_barcodes"
+        />
+
+        <report
+            id="stock_production_barcodes"
+            model="mrp.production"
+            string="Production Lot/Serial Barcodes"
+            report_type="qweb-pdf"
+            name="innosen_custom.report_production_barcodes"
+            file="innosen_custom.report_production_barcodes"
+        />
+
+    </data>
+</odoo>

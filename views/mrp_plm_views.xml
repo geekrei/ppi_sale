@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="mrp_eco_view_form_extend" model="ir.ui.view">
+            <field name="name">mrp.eco.view.form.inherit</field>
+            <field name="model">mrp.eco</field>
+            <field name="inherit_id" ref="mrp_plm.mrp_eco_view_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='bom_id']" position="replace">
+                    <field name="product_id" invisible="1"/>
+                    <field name="bom_id" attrs="{'invisible': [('type', '=', 'routing')], 'required': [('type', 'in', ('bom', 'both'))]}" context="{'default_product_tmpl_id': product_id}"/>
+                </xpath>
+            </field>
+        </record>
+      
+    </data>
+</odoo>

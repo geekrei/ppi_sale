@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_payment_term_form_inherit" model="ir.ui.view">
+            <field name="name">account.payment.term.form.inherit</field>
+            <field name="model">account.payment.term</field>
+            <field name="inherit_id" ref="account.view_payment_term_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='active']" position="after">
+                    <field name="default" />
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Extend payment form to disable fields and hide buttons for OFFICE ASSISTANT group -->
+        <!-- <record id="view_account_payment_form__inherit_disable_edit" model="ir.ui.view">
+            <field name="name">account.payment.form.inherit.disable.edit</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form" />
+            <field name="groups_id" eval="[(4,ref('innosen_custom.group_account_office_assistant'))]"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//button[@name='post']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='payment_type']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='partner_type']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='journal_id']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='destination_journal_id']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='hide_payment_method']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='payment_method_id']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='payment_method_code']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='amount']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='currency_id']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='payment_date']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='communication']" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </xpath>
+            </field>
+        </record> -->
+
+        <!-- HIDE CONFIRM BUTTON FOR OFFICE ASSISTANT -->
+        <record id="view_payment_payment_form_hide_confirm" model="ir.ui.view">
+            <field name="name">account.payment.form.hide.confirm</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form" />
+            <field name="groups_id" eval="[(6, 0, [ref('innosen_custom.group_account_office_assistant')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='post']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- REMOVE EDIT AND CREATE IN ACCOUNT PAYMENTS FOR BIILING (TREE VIEW AND FORM VIEW) -->
+        <!-- <record id="view_account_payment_tree_hide_edit_create" model="ir.ui.view">
+            <field name="name">account.payment.tree.hide.edit.create</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_tree" />
+            <field name="groups_id" eval="[(6, 0, [ref('account.group_account_invoice')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="attributes">
+                    <attribute name="edit">false</attribute>
+                    <attribute name="create">false</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_supplier_payment_tree_hide_edit_create" model="ir.ui.view">
+            <field name="name">account.supplier.payment.tree.hide.edit.create</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_supplier_payment_tree" />
+            <field name="groups_id" eval="[(6, 0, [ref('account.group_account_invoice')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="attributes">
+                    <attribute name="edit">false</attribute>
+                    <attribute name="create">false</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_payment_form_hide_edit_create" model="ir.ui.view">
+            <field name="name">account.payment.form.hide.edit.create</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form" />
+            <field name="groups_id" eval="[(6, 0, [ref('account.group_account_invoice')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form" position="attributes">
+                    <attribute name="edit">false</attribute>
+                    <attribute name="create">false</attribute>
+                </xpath>
+                <xpath expr="//button[@name='post']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_payment_form_hide_cancel" model="ir.ui.view">
+            <field name="name">account.payment.form.hide.cancel</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account_cancel.payment_cancel_form_inherit" />
+            <field name="groups_id" eval="[(6, 0, [ref('account.group_account_invoice')])]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='cancel']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record> -->
+
+        <!-- Extend supplier payment action to filter payments. Do not show employee payments to office assiatant -->
+        <record id="action_account_payments_payable_extend_filter_employee" model="ir.actions.act_window">
+            <field name="name">Supplier Payments (Non-Employee)</field>
+            <field name="res_model">account.payment</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form,graph</field>
+            <field name="context">{'default_payment_type': 'outbound', 'default_partner_type': 'supplier'}</field>
+            <field name="domain">[('partner_type', '=', 'supplier'),('partner_id.employee', '=', False)]</field>
+            <field name="view_id" ref="account.view_account_supplier_payment_tree"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                  Click to register a payment
+                </p><p>
+                  Payments are used to register liquidity movements (send, collect or transfer money).
+                  You can then process those payments by your own means or by using installed facilities.
+                </p>
+            </field>
+        </record>
+
+        <menuitem action="action_account_payments_payable_extend_filter_employee" id="menu_action_account_payments_payable_filter_employee" parent="account.menu_finance_payables" sequence="21" groups="innosen_custom.group_account_office_assistant,account.group_account_invoice"/>
+
+    </data>
+</odoo>

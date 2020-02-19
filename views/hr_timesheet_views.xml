@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+	<!-- ADD PAGE TIMESHEET FOR VALIDATION IN PROJECT TASK -->
+	<record id="view_task_form_timesheet_validate_extend" model="ir.ui.view">
+            <field name="name">project.task.form.timesheet.validate.extend</field>
+            <field name="model">project.task</field>
+            <field name="inherit_id" ref="project.view_task_form2" />
+            <field name="priority" eval="100"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook/page[@name='description_page']" position="after">
+                    <page string="Timesheet Validation" attrs="{'invisible': [('project_id', '=', False)]}">
+                    <field name="timesheet_validate_ids" context="{'default_project_id': project_id,'default_task_id': active_id}">
+                        <tree string="Timesheet Activities" default_order="date">
+                            <field name="date"/>
+                            <field name="user_id" required="1"/>
+                            <field name="name"/>
+                            <field name="unit_amount" string="Duration" widget="float_time"/>
+                            <field name="project_id" invisible="1"/>
+                            <field name="state"/>
+                        </tree>
+                        <form string="Timesheet Validation">
+							<header>
+								<button name="confirm" string="Submit to Manager" type="object" states="draft" class="oe_highlight"/>
+								<button name="validate" string="Validate" type="object" states="confirm" class="oe_highlight"/>
+								<button name="reject" string="Reject" type="object" states="confirm" class="btn-danger"/>
+								<field name="state" widget="statusbar" />
+							</header>
+							<sheet>
+								<group>
+									<group>
+										<field name="project_id"/>
+										<field name="task_id" readonly="1"/>
+										<field name="manager_id" readonly="1"/>
+									</group>
+									<group>
+										<field name="date"/>
+										<field name="unit_amount" string="Duration" widget="float_time"/>
+										<field name="related_timesheet_id" readonly="1"/>
+									</group>
+									<field name="name" required="1"/>
+								</group>
+							</sheet>
+							<div class="oe_chatter">
+								<field name="message_follower_ids" widget="mail_followers"/>
+								<field name="message_ids" widget="mail_thread"/>
+							</div>
+						</form>
+                    </field>
+                </page>
+                </xpath>
+            </field>
+        </record>
+
+	<record id="view_account_analytic_line_validate_form" model="ir.ui.view">
+		<field name="name">account.analytic.line.validate.form</field>
+		<field name="model">account.analytic.line.validate</field>
+		<field name="arch" type="xml">
+			<form string="Timesheet Validation">
+				<header>
+					<button name="confirm" string="Submit to Manager" type="object" states="draft" class="oe_highlight"/>
+					<button name="validate" string="Validate" type="object" states="confirm" class="oe_highlight"/>
+					<button name="reject" string="Reject" type="object" states="confirm" class="btn-danger"/>
+					<field name="state" widget="statusbar" />
+				</header>
+				<sheet>
+					<group>
+						<group>
+							<field name="project_id"/>
+							<field name="task_id"/>
+							<field name="manager_id" readonly="1"/>
+						</group>
+						<group>
+							<field name="date"/>
+							<field name="unit_amount" string="Duration" widget="float_time" />
+							<field name="related_timesheet_id" readonly="1"/>
+						</group>
+						<field name="name" required="1"/>
+					</group>
+				</sheet>
+				<div class="oe_chatter">
+					<field name="message_follower_ids" widget="mail_followers"/>
+					<field name="message_ids" widget="mail_thread"/>
+				</div>
+			</form>
+		</field>
+	</record>
+
+	<record id="view_account_analytic_line_validate_tree" model="ir.ui.view">
+		<field name="name">account.analytic.line.validate.tree</field>
+		<field name="model">account.analytic.line.validate</field>
+		<field name="arch" type="xml">
+			<tree string="Timesheet Validation">
+				<field name="date"/>
+				<field name="project_id"/>
+				<field name="task_id"/>
+				<field name="name"/>
+				<field name="unit_amount" string="Duration" widget="float_time"/>
+				<field name="state" />
+			</tree>
+		</field>
+	</record>
+
+	<record id="hr_timehseet_for_validate" model="ir.actions.act_window">
+		<field name="name">My Timesheets Validation</field>
+		<field name="res_model">account.analytic.line.validate</field>
+		<field name="help" type="html">
+			<p class="oe_view_nocontent_create">
+				Click to submit a timesheet for validation.
+			</p>
+		</field>
+	</record>
+
+	<menuitem id="menu_hr_timehseet_for_validate" parent="hr_timesheet.menu_hr_time_tracking" action="hr_timehseet_for_validate" name="My Timesheets For Validation" sequence="10"/>
+
+
+
+</odoo>

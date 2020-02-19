@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="tag_multiple_partners_view" model="ir.ui.view">
+        <field name="name">Tag Partners</field>
+        <field name="model">tag.multiple.partners</field>
+        <field name="arch" type="xml">
+            <form string="Tag Partners">
+                <group>
+                    <field name="tags_to_add_ids" />
+                    <field name="tags_to_remove_ids" />
+                </group>
+                <footer>
+                    <button name="apply" string="Apply" type="object" default_focus="1" class="oe_highlight"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="tag_multiple_partners_action" model="ir.actions.act_window">
+        <field name="name">Tag Partners</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">tag.multiple.partners</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="tag_multiple_partners_view"/>
+        <field name="target">new</field>
+    </record>
+
+    <record id="tag_multiple_partners_value" model="ir.values">
+        <field name="name">Tag Partners</field>
+        <field name="model">res.partner</field>
+        <field name="key" >action</field>
+        <field name="key2">client_action_multi</field>
+        <field name="value" eval="'ir.actions.act_window,%d'%tag_multiple_partners_action"/>
+    </record>
+
+</data>
+</odoo>

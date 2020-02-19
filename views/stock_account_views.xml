@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_config_settings_inherit_extend" model="ir.ui.view">
+            <field name="name">stock.config.settings.inherit.extend</field>
+            <field name="model">stock.config.settings</field>
+            <field name="inherit_id" ref="stock_account.view_stock_config_settings_inherit"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='group_stock_inventory_valuation']" position="after">
+                    <field name="group_account_move_status" widget="radio" />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,175 +1,407 @@
-from odoo import models, fields, api, _ 
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
+from datetime import datetime, timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+
+import logging
+_logger = logging.getLogger(__name__)
 
 class SaleOrder(models.Model):
 	_inherit = 'sale.order'
 
-	rfe_id = fields.Many2one('ppi.sale.estimate', 'Estimate')
+	repair_id = fields.Many2one('mrp.repair', 'Repair Order')
+	partner_bank_id = fields.Many2one('res.partner.bank', string='Bank Account')
 
-	state = fields.Selection([
-		('draft', 'Quotation'),
-		('sent', 'Quotation Sent'),
-		('validate1', '1st Validation'),
-		('validate2', '2nd Validation'),
-		('validate3', 'Final Validation'),
-		('sale', 'Sales Order'),
-		('done', 'Locked'),
+	user_id = fields.Many2one('res.users', string='Salesperson', index=True, track_visibility='onchange')
+
+	# OVERRIDE TO NOT INCLUDE CONFIRMATION DATE IN DUPLICATE/COPY OF RECORD
+	confirmation_date = fields.Datetime(string='Confirmation Date', readonly=True, index=True, help="Date on which the sale order is confirmed.", oldname="date_confirm", copy=False)
+
+	# NEW FIELD / CUSTOM
+	po_ref = fields.Char(string='P.O. Reference', compute='get_po', help='This is the reference number of PO generated from this SO')
+	# show_country_origin = fields.Boolean(default=False, string='Show Country of Origin', help='If check, country of origin of products will be displayed in report.')
+	delivery_status = fields.Selection([
+		('no_delivery', 'No Delivery'),
+		('waiting', 'Waiting'),
+		('to_deliver', 'To Deliver'),
+		('partial', 'Partially Delivered'),
+		('delivered', 'Delivered'),
 		('cancel', 'Cancelled'),
-	])
+		], string='Delivery Status', compute='_get_delivered', copy=False, index=True, readonly=True, store=True)
+	is_delivered_manual_override = fields.Boolean(string='Override Deliverd Status', help="Override computation of delivery and set delivered status to DELIVERED")
 
-	# quote_state = fields.Selection([
-	# 	('validate1', 'Technical Supervisor'),
-	# 	('validate2', 'Sales Manager'),
-	# 	('validate3', 'Final Validation'),
-	# ], string='Quotation State')
-
-	validate_sale_head = fields.Boolean(default=False)
-	validate_president = fields.Boolean(default=False)
-
+	# Get Email To / Document Followers
 	@api.multi
-	def action_validate1(self):
-		self.write({'state': 'validate1'})
-
-	@api.multi
-	def action_validate2(self):
+	def get_po(self):
 		for record in self:
-			if record.amount_total <= 2000000.00:
-				record.write({'state': 'validate3'})
+			po_ref = ''
+			purchase_order = self.env['purchase.order'].search([('origin', '=', record.name)], limit=1)
+			if purchase_order:
+				po_ref = purchase_order.name
 
-			if record.amount_total >= 2000000.00 and record.amount_total <= 5000000.00:
-				record.write({'state': 'validate2'})
-				record.write({'validate_sale_head': True})
+			record.po_ref = po_ref
 
-			if record.amount_total >= 5000000.00:
-				record.write({'state': 'validate2'})
-				record.write({'validate_president': True})
-
-	@api.multi
-	def action_validate3(self):
-		self.write({'state': 'validate3'})
-
-	@api.multi
-	def action_validate_sale_head(self):
-		self.write({'state': 'validate3', 'validate_sale_head': False})
-
-	@api.multi
-	def action_validate_president(self):
-		self.write({'state': 'validate3', 'validate_president': False})
-
+	# SET SALESPERSON
+	@api.onchange('company_id')
+	def set_salesperson(self):
+		if self.company_id.default_salesperson:
+			self.user_id = self.company_id.default_salesperson
+		else:
+			self.user_id = self.env.user
+	
 	@api.multi
 	def action_confirm(self):
-		for order in self:
-			for line in order.order_line:
-				line._update_bom_qty()
+		create_repair = False
+		if any(line.product_id.track_service == 'repair' for line in self.mapped('order_line')):
+			if not any(line.product_id.type == 'product' for line in self.mapped('order_line')):
+				raise UserError(_('One of the line item product track service is set to create repair order. However, no product in the line item can be repaired.'))
+			create_repair = True
 
-		res = super(SaleOrder, self).action_confirm()
+		for order in self:
+
+			to_repair = {}
+			for line in order.order_line:
+				if line.product_id.type == 'product':
+					to_repair = line 
+
+			if create_repair == True and to_repair:
+				location = False
+				
+				# warehouse = self.env.ref('stock.warehouse0', raise_if_not_found=False)
+				# if warehouse:
+				# 	location = warehouse.lot_stock_id.id
+
+				warehouse = order.warehouse_id
+				if warehouse:
+					location = warehouse.lot_stock_id.id
+
+				repair_order = self.env['mrp.repair'].create({
+					'product_id': to_repair.product_id.id,
+					'product_qty': to_repair.product_uom_qty,
+					'product_uom': to_repair.product_uom.id,
+					'partner_id': order.partner_id.id,
+					'location_id': location,
+					'location_dest_id': location,
+					'sale_id': order.id,
+					# 'reference': order.client_order_ref,
+				})
+
+				if repair_order:
+					order.write({'repair_id': repair_order.id})
+
+		result = super(SaleOrder, self).action_confirm()
+		return result
+
+	@api.multi
+	@api.onchange('partner_id')
+	def onchange_partner_id(self):
+		"""
+		Update the following fields when the partner is changed:
+		- Pricelist
+		- Payment terms
+		- Invoice address
+		- Delivery address
+		"""
+		if not self.partner_id:
+			self.update({
+				'partner_invoice_id': False,
+				'partner_shipping_id': False,
+				'payment_term_id': False,
+				'fiscal_position_id': False,
+			})
+			return
+
+		addr = self.partner_id.address_get(['delivery', 'invoice'])
+		values = {
+			'pricelist_id': self.partner_id.property_product_pricelist and self.partner_id.property_product_pricelist.id or False,
+			'payment_term_id': self.partner_id.property_payment_term_id and self.partner_id.property_payment_term_id.id or False,
+			'partner_invoice_id': addr['invoice'],
+			'partner_shipping_id': addr['delivery'],
+			'user_id': self.partner_id.user_id.id or self.env.uid
+		}
+		if self.env['ir.config_parameter'].sudo().get_param('sale.use_sale_note') and self.env.user.company_id.sale_note:
+			values['note'] = self.with_context(lang=self.partner_id.lang).env.user.company_id.sale_note
+
+		if self.partner_id.team_id:
+			values['team_id'] = self.partner_id.team_id.id
+
+		# [NEW] CHECK IF NO DEFAULT PAYMENT FOR PARTNER, SET DEFAULT PAYMENT TERM
+		if not self.partner_id.property_payment_term_id:
+			default_payment_term = self.env['account.payment.term'].search([('default','=',True)], limit=1)
+			values['payment_term_id'] = default_payment_term.id
+
+		self.update(values)
+
+	# @api.multi
+	# def action_view_repair(self):
+	# 	action = self.env.ref('mrp_repair.action_repair_order_tree').read()[0]
+	# 	if self.repair_id:
+	# 		action['views'] = [(self.env.ref('mrp_repair.action_repair_order_tree').id, 'form')]
+	# 		action['res_id'] = self.repair_id.id
+	# 	else:
+	# 		action = {'type': 'ir.actions.act_window_close'}
+	# 	return action
+
+	@api.depends('confirmation_date', 'order_line.customer_lead')
+	def _compute_commitment_date(self):
+		"""Compute the commitment date"""
+		for order in self:
+			if order.confirmation_date:
+				dates_list = []
+				order_datetime = fields.Datetime.from_string(order.confirmation_date)
+				
+				for line in order.order_line.filtered(lambda x: x.state != 'cancel'):
+					dt = order_datetime + timedelta(days=line.customer_lead or 0.0)
+					dates_list.append(dt)
+				if dates_list:
+					commit_date = min(dates_list) if order.picking_policy == 'direct' else max(dates_list)
+					order.commitment_date = fields.Datetime.to_string(commit_date)
+
+	# OVERRIDE CREATE TO SET PAYMENT TERM FOR SO GENERATED FROM PO
+	@api.model
+	def create(self, values):
+		payment_term = values.get('payment_term_id')
+		partner_id = values.get('partner_id')
+
+		if not values.get('payment_term_id'):
+			partner = self.env['res.partner'].browse(partner_id)
+			payment_term = partner.property_payment_term_id and partner.property_payment_term_id.id or False
+			if not payment_term:
+				default_payment_term = self.env['account.payment.term'].search([('default','=',True)], limit=1)
+				payment_term = default_payment_term.id
+
+		values['payment_term_id'] = payment_term
+		
+		result = super(SaleOrder, self).create(values)
+
+		return result
+
+	# NEW FUNCTION : RECOMPUTE DELIVERY TO ADDRESS ISSUE WHERE DELIVERED QTY IS NOT UPDATED IF ORIGINAL MOVE IS CANCELLED
+	@api.multi
+	def action_compute_delivery(self):
+		for record in self:
+			# _logger.info('CHILLAZ')
+			# # UPDATE MOVES OF PICKING TO SET PROCUREMENT
+			# for picking in record.picking_ids.filtered(lambda r: r.state == 'cancel'):
+			# 	_logger.info(picking)
+
+			# # UPDATE MOVES OF PICKING TO SET PROCUREMENT
+			_logger.info('KRKL')
+			# UPDATE PICKING
+			if not record.picking_ids:
+				picking_ids = self.env['stock.picking'].search([('group_id', '=', record.procurement_group_id.id)]) if record.procurement_group_id else []
+				_logger.info(picking_ids)
+				record.picking_ids = picking_ids
+				record.delivery_count = len(record.picking_ids)
+			for picking in record.picking_ids.filtered(lambda r: r.state == 'done'):
+				for move in picking.move_lines:
+					if not move.procurement_id:
+						for line in record.order_line:
+							if move.product_id == line.product_id and move.product_uom == line.product_uom and move.state == 'done':
+								# SEARCH FOR CANCELLED PROCUREMENT
+								# procurement_id = False
+
+								procurement_id = self.env['procurement.order'].search([('group_id', '=', record.procurement_group_id.id),('product_id', '=', line.product_id.id),('product_qty', '=', line.product_qty),('product_uom', '=', line.product_uom.id)], limit=1)
+
+								
+								# Try to create new procurement order if no existing procurement can be used.
+								# if not procurement_id:
+								# 	procurement_new_id = self.env['procurement.order'].create({
+								# 		'name': move.name,
+								# 		'product_id': move.product_id.id,
+								# 		'product_qty': move.qty_done,
+								# 		'date_planned': picking.min_date,
+								# 		'priority': picking.priority,
+								# 		'warehouse_id': record.warehouse_id.id,
+								# 		'location_id': picking.location_dest_id.id,
+								# 		'origin': record.name,
+								# 		'group_id': record.procurement_group_id.id,
+								# 		'rule_id': move.rule_id.id,
+								# 		'partner_dest_id': record.partner_shipping_id.id,
+								# 		'company_id': picking.company_id.id,
+								# 	})
+								# 	procurement_id = procurement_new_id
+								# 	_logger.info('EXISTING PROCUREMENT')
+								
+								_logger.info(procurement_id)
+								if procurement_id:
+									if procurement_id == 'cancel':
+										procurement_id.write({'state': 'done'})
+									move.write({'procurement_id': procurement_id.id, 'group_id': procurement_id.group_id.id})
+									# UPDATE PROCUREMENTS IN ORDER LINES
+									line.write({'procurement_ids': [(4,procurement_id.id)]})
+					else:
+						for line in record.order_line:
+							if not line.procurement_ids:
+								if move.product_id == line.product_id and move.product_uom == line.product_uom and move.state == 'done':
+									# UPDATE PROCUREMENTS IN ORDER LINES
+									line.write({'procurement_ids': [(4,move.procurement_id.id)]})
+
+			# UPDATE QTY
+			for line in record.order_line:
+				line.qty_delivered = line._get_delivered_qty()
+
+	@api.multi
+	def action_unlock(self):
+		self.write({'state': 'sale'})
+
+	@api.model
+	def _get_rental_date_planned(self, line):
+		return line.start_date
+
+	@api.model
+	def _prepare_order_line_procurement(
+			self, order, line, group_id=False):
+		res = super(SaleOrder, self)._prepare_order_line_procurement(
+			order, line, group_id=group_id)
+		if (
+				line.product_id.rented_product_id and
+				line.rental_type == 'new_rental'):
+			res.update({
+				'product_id': line.product_id.rented_product_id.id,
+				'product_qty': line.rental_qty,
+				'product_uos_qty': line.rental_qty,
+				'product_uom': line.product_id.rented_product_id.uom_id.id,
+				'product_uos': line.product_id.rented_product_id.uom_id.id,
+				'location_id':
+				order.warehouse_id.rental_out_location_id.id,
+				'route_ids':
+				[(6, 0, [line.order_id.warehouse_id.rental_route_id.id])],
+				'date_planned': self._get_rental_date_planned(line),
+				})
+		elif line.sell_rental_id:
+			res['route_ids'] = [(6, 0, [
+				line.order_id.warehouse_id.sell_rented_product_route_id.id])]
 		return res
+
+	@api.depends('state','order_line.qty_delivered','order_line.delivery_status','is_delivered_manual_override')
+	@api.one
+	def _get_delivered(self):
+		if self.is_delivered_manual_override:
+			delivery_status = 'delivered'
+		else:
+			if not self.order_line or self.state in ['draft','sent']:
+				delivery_status = 'no_delivery'
+			elif any(move.state in ['draft','waiting','confirmed'] for move in self.mapped('order_line').filtered(lambda r: r.product_id.type != 'service').mapped('procurement_ids').mapped('move_ids')):
+				delivery_status = 'waiting'
+
+			elif any(move.state == 'assigned' for move in self.mapped('order_line').filtered(lambda r: r.product_id.type != 'service').mapped('procurement_ids').mapped('move_ids')):
+				delivery_status = 'to_deliver'
+
+			elif any(line.qty_delivered >= line.product_uom_qty for line in self.mapped('order_line').filtered(lambda r: r.product_id.type != 'service')) and not all(line.qty_delivered >= line.product_uom_qty for line in self.mapped('order_line').filtered(lambda r: r.product_id.type != 'service')):
+				delivery_status = 'partial'
+
+			elif all(move.state == 'cancel' for move in self.mapped('order_line').filtered(lambda r: r.product_id.type != 'service').mapped('procurement_ids').mapped('move_ids')):
+				delivery_status = 'cancel'
+
+			elif all(line.qty_delivered >= line.product_uom_qty for line in self.mapped('order_line').filtered(lambda r: r.product_id.type != 'service')):
+				delivery_status = 'delivered'
+			else:
+				delivery_status = 'no_delivery'
+
+		self.update({
+			'delivery_status': delivery_status
+		})
+
+	@api.multi
+	def _compute_delivered(self):
+		for order in self:
+			order._get_delivered()
 
 
 class SaleOrderLine(models.Model):
 	_inherit = 'sale.order.line'
 
-	# NEW FIELDS
-	thickness = fields.Float()
-	bmt = fields.Float(string='BMT')
-	nom_width = fields.Float(digits=(12,3))
-	feed_coil = fields.Float()
-	m_length = fields.Float(string='Length', digits=(12,3))
-	coating_mass = fields.Integer()
-	color = fields.Selection([('brown','B. Brown'),('red','S. Red'),('blue','P. Blue')])
-	fh_cq = fields.Selection([('fh','FH'),('cq','CQ')], string='FH/CQ')
-	wt = fields.Float(compute='_compute_wt', store=True, digits=(12,4)) # Compute Field
-	wt_per_qty = fields.Float(compute='_compute_wt', store=True, digits=(12,4)) # Compute Field
-	price_lm = fields.Float(string='Price/LM')
-	p_mt = fields.Float(string='P/Mt', compute='_compute_p_mt', readonly=True, store=True) # Compute Field
-	lm_mt = fields.Float(string='LM/Mt', compute='_compute_lm_mt', store=True, help='Yield', digits=(12,3)) # Compute Field
+	delivery_status = fields.Selection([
+		('no_delivery', 'No Delivery'),
+		('waiting', 'Waiting'),
+		('to_deliver', 'To Deliver'),
+		('partial', 'Partially Delivered'),
+		('delivered', 'Delivered'),
+		('cancel', 'Cancelled'),
+		], string='Delivery Status', compute='_get_delivered', copy=False, index=True, readonly=True, store=True)
 
-	# OVERRIDE FIELDS
-	price_unit = fields.Float(compute='_compute_price_unit', store=True)
+	@api.depends('order_id.state','qty_delivered','procurement_ids.move_ids','procurement_ids.move_ids.state')
+	@api.one
+	def _get_delivered(self):
+		# for order in self:
+		# move_ids = self.procurement_ids.move_ids
+		# delivery_status = 'no_delivery'		
 
-	# OVERRIDE FUNCTIONS
-	# @api.multi
-	# @api.onchange('product_id')
-	# def product_id_change(self):
-	# 	res = super(SaleOrderLine, self).product_id_change()
+		_logger.info("HELLO")
+		# _logger.info(move_ids)
+		_logger.info(self.name)
+		if self.procurement_ids.move_ids:
+			
+			if any(move.state in ['draft','waiting','confirmed'] for move in self.mapped('procurement_ids').mapped('move_ids')):
+				# delivery_status = 'waiting'
+				self.delivery_status = 'waiting'
 
-	# 	vals = {}
+			elif any(move.state in ['partially_assigned','assigned'] for move in self.mapped('procurement_ids').mapped('move_ids')):
+				# delivery_status = 'to_deliver'
+				self.delivery_status = 'to_deliver'
 
-	# 	vals['thickness'] = self.product_id.thickness
-	# 	vals['bmt'] = self.product_id.bmt
-	# 	vals['nom_width'] = self.product_id.nom_width
-	# 	vals['feed_coil'] = self.product_id.feed_coil
-	# 	vals['m_length'] = self.product_id.m_length
-	# 	vals['coating_mass'] = self.product_id.coating_mass
-	# 	vals['color'] = self.product_id.color
-	# 	vals['fh_cq'] = self.product_id.fh_cq
-	# 	vals['price_lm'] = self.product_id.price_lm
+			elif all(move.state == 'cancel' for move in self.mapped('procurement_ids').mapped('move_ids')):
+				# delivery_status = 'cancel'
+				self.delivery_status = 'cancel'
 
-	# 	self.update(vals)
-	# 	return res
+			elif all(line.qty_delivered >= line.product_uom_qty for line in self.filtered(lambda r: r.product_id.type != 'service')):
+				# delivery_status = 'delivered'
+				self.delivery_status = 'delivered'
+		else:
+			self.delivery_status = 'no_delivery'
 
-	# NEW FUNCTIONS
-	@api.depends('price_lm','m_length')
-	def _compute_price_unit(self):
-		for line in self:
-			line.price_unit = line.price_lm * line.m_length
+	def get_serial_numbers(self, line):
+		serialnos={}
 
-	@api.depends('price_subtotal','wt')
-	def _compute_p_mt(self):
-		for line in self:
-			if line.wt > 0:
-				line.p_mt = line.price_subtotal / line.wt
+		pickings = line.mapped('order_id').mapped('picking_ids')
+		serial_numbers = set(pickings.mapped('move_lines').mapped('quant_ids').mapped('lot_id'))
 
-	# COMPUTE YIELD
-	@api.depends('bmt','feed_coil', 'coating_mass')
-	def _compute_lm_mt(self):
-		for line in self:
-			if line.bmt and line.feed_coil and line.coating_mass:
-				line.lm_mt = (1000000/((line.bmt * line.feed_coil * 7850) + (line.feed_coil * line.coating_mass) + (line.feed_coil * 53)))
-				# 1000000 / (bmt * feed_coil * 7850) + (feed_coil * coating_mass) + (feed_coil * 53)
-
-	# COMPUTE WEIGHT
-	@api.depends('m_length','product_uom_qty', 'lm_mt')
-	def _compute_wt(self):
-		for line in self:
-			if line.m_length and line.product_uom_qty and line.lm_mt:
-				line.wt = ((line.m_length * line.product_uom_qty) / line.lm_mt)
-				line.wt_per_qty = ((line.m_length * 1) / line.lm_mt)
-				# ((length * qty)/yield)
-
-	# @api.multi
-	# def _get_bom_component_qty(self, bom):
-	# 	product_bom_qty = self.wt_per_qty
-	# 	bom_quantity = self.product_uom._compute_quantity(self.product_uom_qty, bom.product_uom_id)
-	# 	boms, lines = bom.explode(self.product_id, bom_quantity)
-	# 	components = {}
-	# 	for line, line_data in lines:
-	# 		product = line.product_id.id
-	# 		uom = line.product_uom_id
-	# 		# qty = line.product_qty
-	# 		qty = product_bom_qty # Computed Wt per quantity
-	# 		if components.get(product, False):
-	# 			if uom.id != components[product]['uom']:
-	# 				from_uom = uom
-	# 				to_uom = self.env['product.uom'].browse(components[product]['uom'])
-	# 				qty = from_uom._compute_quantity(qty, to_uom)
-	# 			components[product]['qty'] += qty
-	# 		else:
-	# 			# To be in the uom reference of the product
-	# 			to_uom = self.env['product.product'].browse(product).uom_id
-	# 			if uom.id != to_uom.id:
-	# 				from_uom = uom
-	# 				qty = from_uom._compute_quantity(qty, to_uom)
-	# 			components[product] = {'qty': qty, 'uom': to_uom.id}
-	# 	return components
+		# return serialnos
+		for n in serial_numbers:
+			if serialnos.has_key(n.product_id.id):
+				serialnos[n.product_id.id].append(n.name)
+			else:
+				serialnos[n.product_id.id]=[n.name]
+		# we have the serial numbers let us now allocate per line
+		serialnosperline={}
+		serial = ''
+		# for line in o.invoice_line_ids:
+			#product=line.product_id.rented_product_id if line.product_id.rented_product_id else line.product_id
+		product = line.product_id
+		if serialnos.has_key(product.id):
+			lengte=len(serialnos[product.id])
+			order=', '.join(serialnos[product.id][:(int(line.quantity) if int(line.quantity)<lengte else lengte)])
+			serialnos[product.id]=serialnos[product.id][(int(line.quantity) if int(line.quantity)<=lengte else lengte):]
+			serialnosperline[line.id]=order
+			serial = order
+		else:
+			serialnosperline[line.id] = ''
+			serial = ''
+			
+		return serial
 
 	@api.multi
-	def _update_bom_qty(self):
-		bom_line = self.env['mrp.bom.line']
-		for record in self:
-			product_bom_qty = record.wt_per_qty
-			if record.product_id.bom_ids:
-				for bom in record.product_id.bom_ids:
-					# bom_line.search([('id',)])
-					for line in bom.bom_line_ids:
-						line.write({'product_qty': product_bom_qty})
-		return True
+	def _prepare_order_line_procurement(self, group_id=False):
+		vals = super(SaleOrderLine, self)._prepare_order_line_procurement(group_id=group_id)
+		# date_planned = datetime.strptime(self.order_id.confirmation_date, DEFAULT_SERVER_DATETIME_FORMAT)\
+		# 	+ timedelta(days=self.customer_lead or 0.0) - timedelta(days=self.order_id.company_id.security_lead)
+		date_planned = datetime.strptime(self.order_id.commitment_date, DEFAULT_SERVER_DATETIME_FORMAT)
+		vals.update({
+			'date_planned': date_planned.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+			'location_id': self.order_id.partner_shipping_id.property_stock_customer.id,
+			'route_ids': self.route_id and [(4, self.route_id.id)] or [],
+			'warehouse_id': self.order_id.warehouse_id and self.order_id.warehouse_id.id or False,
+			'partner_dest_id': self.order_id.partner_shipping_id.id,
+			'sale_line_id': self.id,
+		})
+		return vals
+
+	@api.multi
+	def _get_delivered_qty(self):
+		"""Computes the delivered quantity on sale order lines, based on done stock moves related to its procurements
+		"""
+		self.ensure_one()
+		if self.product_id.rented_product_id:
+			return 0.0
+		return super(SaleOrderLine, self)._get_delivered_qty()

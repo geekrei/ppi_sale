@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<template id="report_purchasequotation_document_extend" inherit_id="purchase.report_purchasequotation_document">
+    <xpath expr="//div[@class='page']" position="replace">
+        <!-- <t t-call="innosen_custom.external_layout_delivery">
+            <t t-set="o" t-value="o.with_context({'lang':o.partner_id.lang})" /> -->
+            <div class="page">
+                <div class="oe_structure"/>
+
+                <div class="row mt32 mb32">
+                    <div class="col-xs-6">
+                        <strong>Shipping address:</strong>
+                        <div t-if="o.dest_address_id">
+                            <div t-field="o.dest_address_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;, &quot;phone&quot;, &quot;fax&quot;], &quot;no_marker&quot;: True, &quot;phone_icons&quot;: True}"/>
+                        </div>
+                        <div t-if="not o.dest_address_id and o.picking_type_id.warehouse_id">
+                            <span t-field="o.picking_type_id.warehouse_id.name"/>
+                            <div t-field="o.picking_type_id.warehouse_id.partner_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;phone&quot;, &quot;fax&quot;], &quot;no_marker&quot;: True, &quot;phone_icons&quot;: True}"/>
+                        </div>
+                    </div>
+                    <div class="col-xs-5 col-xs-offset-1">
+                        <div t-field="o.partner_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;, &quot;phone&quot;, &quot;fax&quot;], &quot;no_marker&quot;: True, &quot;phone_icons&quot;: True}"/>
+                            <p t-if="o.partner_id.vat">VAT: <span t-field="o.partner_id.vat"/></p>
+                    </div>
+                </div>
+
+                <h2>Request for Quotation</h2>
+
+                <table class="table table-condensed">
+                    <thead>
+                        <tr>
+                            <th><strong>Item</strong></th>
+                            <th><strong>Description</strong></th>
+                             <!-- <th class="text-center">Innosen Part No.</th> -->
+                             <th class="text-center">Supplier Part No.</th>
+                            <th class="text-center"><strong>Expected Date</strong></th>
+                            <th class="text-right"><strong>Qty</strong></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="o.order_line" t-as="order_line">
+                            <td>
+                                <t t-esc="order_line_index+1"/>
+                            </td>
+                            <td>
+                                <span t-field="order_line.name"/>
+                            </td>
+                            <!-- <td>
+                                <span t-field="order_line.product_id.default_code"/>
+                            </td> -->
+                            <td>
+                                <t t-set="si" t-value="order_line.product_id.seller_ids.filtered(lambda r: r.name == o.partner_id).sorted(key=lambda r: r.product_code)"/> 
+                                <span t-if="si and si[0]"><t t-esc="si[0].product_code"/></span>
+                            </td>
+                            <td class="text-center">
+                                <span t-field="order_line.date_planned" t-options='{"format": "yyyy-MM-dd"}'/>
+                            </td>
+                            <td class="text-right">
+                                <span t-esc="int(float(order_line.product_qty))"/>
+                                <span t-field="order_line.product_uom" groups="product.group_uom"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p t-field="o.notes"/>
+                <p>
+                    <b>SPECIAL INSTRUCTIONS</b><br/>            
+                    PLEASE ACKNOWLEDGE RECEIPT OF THIS BY RETURN EMAIL<br/>             
+                    AND ALSO PLEASE ADVISE OF ANTICIPATED DELIVERY DATE.<br/>           
+                    PLEASE ENSURE THAT PURCHASE ORDER <span t-field="o.name"/> IS QUOTED<br/>                   
+                    ON ALL CORRESPONDENCE WITH RESPECT TO THIS PURCHASE<br/>                
+                    OTHERWISE PAYMENT WILL BE DELAYED.<br/><br/>            
+                </p>
+                <br/>
+                <p>Innosen T&amp;C of purchase applies</p>
+                <div class="oe_structure"/>
+                
+            </div>
+            
+        <!-- </t> -->
+    </xpath>
+</template>
+
+
+</data>
+</odoo>

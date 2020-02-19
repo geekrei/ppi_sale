@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="mrp_production_workcenter_form_view_inherit_extend" model="ir.ui.view">
+			<field name="name">mrp.production.workorder.extend</field>
+			<field name="model">mrp.workorder</field>
+			<field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit" />
+			<field name="arch" type="xml">
+				<xpath expr="//form/header" position="inside">
+					<button name="button_stop" type="object" string="Stop Production" class="btn-warning" attrs="{'invisible': ['|', '|', ('working_state', '=', 'blocked'), ('is_user_working', '=', True), ('state', 'in', ('done', 'pending', 'ready', 'cancel'))]}"></button>
+                	<button name="button_stop" type="object" string="Stop Production" attrs="{'invisible': ['|', '|', ('production_state', '=', 'done'), ('working_state', '=', 'blocked'), ('state', '!=', 'done')]}"/>
+					<button name="button_compute_moves" type="object" string="Update Active Moves" attrs="{'invisible': ['|',('state', '=', 'done'),('active_move_lot_ids', '=', [])]}" class="btn-info"/>
+				</xpath>
+				<field name="qty_producing" position="attributes">
+					<attribute name="operator">child_of</attribute>
+				</field>
+			</field>
+		</record>
+	</data>
+</odoo>

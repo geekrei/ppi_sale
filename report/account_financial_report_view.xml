@@ -1,0 +1,17 @@
+<!-- <?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		
+        <record id="view_account_financial_report_line_form_extend" model="ir.ui.view">
+            <field name="name">account.financial.html.report.line.form.extend</field>
+            <field name="model">account.financial.html.report.line</field>
+            <field name="inherit_id" ref="account_reports.view_account_financial_report_line_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='special_date_changer']" position="after">
+                    <field name="include_previous_period"/>
+                </xpath>    
+            </field>
+        </record>
+
+	</data>
+</odoo> -->

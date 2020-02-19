@@ -1,0 +1,539 @@
+<odoo>
+    <data>
+        <template id="report_invoice_proforma_document">
+            <t t-call="innosen_custom.external_layout_invoice">
+                <t t-set="o" t-value="o.with_context({'lang':o.partner_id.lang})" />
+                <div class="page">
+                    <table class="list_table" style="border:none;font-size:12px" width="100%">
+                        <tr>
+                            <td class="noborder" width="46%">
+                                <!-- LOGO HERE -->
+                                <img t-if="o.company_id.logo" t-att-src="'data:image/png;base64,%s' %o.company_id.logo" height="65" width="240"/>
+                            </td>
+                            <td class="noborder"  width="8%">
+                            </td>
+                            <td class="noborder" align="right" width="46%" style="vertical-align: top;">
+                                <h2>
+                                    <span>PROFORMA INVOICE</span>
+                                </h2>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="noborder" valign="top" width="46%">
+                                <br/>
+                                <span class="uppercase" t-field="o.company_id.name"/><br/>
+                                <span t-field="o.company_id.street"/> <br/>
+                                <span t-field="o.company_id.street2"/> <span t-field="o.company_id.zip"/> <span t-field="o.company_id.city"/>, <span t-field="o.company_id.country_id.name"/><br/>
+                                <span>Tel No.: <span t-field="o.company_id.phone"/></span><br/>
+                                <span>Email: accounts@innosen.com</span>
+                            </td>
+                            <td class="noborder" width="8%">
+                            </td>
+                            <td class="noborder" width="46%">
+                                <table class="inner_table">
+                                    <tr>
+                                        <td>ACCOUNT NO. &#160;&#160;&#160;</td>
+                                        <td>: &#160;<span t-field="o.partner_id.ref"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>DATE &#160;&#160;&#160;</td>
+                                        <!-- <td>: &#160;<span t-field="o.date_order" t-options='{"format": "yyyy-MM-dd"}'/></td> -->
+                                        <t t-if="o.confirmation_date">
+                                            <td>: &#160;<span t-field="o.confirmation_date" t-options='{"format": "yyyy-MM-dd"}'/></td>
+                                        </t> 
+                                        <t t-if="not o.confirmation_date">
+                                            <td>: &#160;<span t-field="o.date_order" t-options='{"format": "yyyy-MM-dd"}'/></td>
+                                        </t>
+                                    </tr>
+                                    <tr>
+                                        <td>PAYMENT TERMS &#160;&#160;&#160;</td>
+                                        <td>: &#160;<span t-field="o.payment_term_id"/></td>                        
+                                    </tr>   
+                                    <tr>
+                                        <td>P.O. NUMBER &#160;&#160;&#160;</td>
+                                        <td>: &#160;<span t-field="o.client_order_ref"/></td>
+                                    </tr>
+                                    <!-- <tr>
+                                        <td>REFERENCE &#160;&#160;&#160;</td>
+                                        <td>: &#160;<span t-field="o.origin"/></td>
+                                    </tr> -->
+                                    <tr>
+                                        <td><b>
+                                            <span>
+                                                PROFORMA INVOICE NO.
+                                            </span>
+                                        </b> &#160;&#160;&#160;</td>
+                                        <td><b>: &#160;<span t-field="o.name"/></b></td>
+                                    </tr>  
+                                </table>
+                            </td>
+                        </tr>
+                        <tr><td><br/></td></tr>
+                        <tr>
+                            <td style="border-style:solid;border-color:#808080;border-width:1px 1px 0px 1px;padding-left:0.5em;padding-top:0.5em;padding-right:0.5em;padding-bottom:0.5em;" >
+                                <b>INVOICE TO:</b>
+                            </td>
+                            <td class="noborder" >
+                            </td>
+                            <td style="border-style:solid;border-color:#808080;border-width:1px 1px 0px 1px;padding-left:0.5em;padding-top:0.5em;padding-right:0.5em;padding-bottom:0.5em;" >
+                                <b>DELIVER TO:</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border-style:solid; border-color:#808080;border-width:0px 1px 1px 1px;padding-left:1.5em;padding-top:0.10em;" valign="top">                 
+                                <span class="uppercase">
+                                    <b>
+                                        <span t-field="o.partner_id"/>
+                                    </b><br />
+                                </span>
+                                <address t-field="o.partner_id"
+                                t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}' />
+                            </td>
+                            <td class="noborder" >
+                            </td>
+                            <td style="border-style:solid; border-color:#808080;border-width:0px 1px 1px 1px;padding-left:1.5em;padding-top:0.10em;"  valign="top">
+                                <span class="uppercase">
+                                    <b>
+                                        <span t-field="o.partner_shipping_id"/>
+                                    </b><br />
+                                </span>
+                                <address t-field="o.partner_shipping_id"
+                                t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}' />
+                            </td>
+                        </tr>
+                    </table>
+
+                    <br/>
+
+                    <!-- Is there a discount on at least one line? -->
+                    <t t-set="display_discount" t-value="any([l.discount for l in o.order_line])"/>
+                    <t t-set="line_count" t-value="0"/>
+
+                    <table class="table table-condensed" style="font-size: 12px">
+                        <thead>
+                            <tr style="border-top:1px solid #000000;">
+                                <th width="15%">Product Code</th>
+                                <!-- <th width="15%">Serial No.</th> -->
+                                <th>Description</th>
+                                <th>Notes</th>
+                                <th class="text-right" width="8%">Qty</th>
+                                <th class="text-right" width="8%">UOM</th>
+                                <th class="text-right" width="10%">Unit Price</th>
+                                <th t-if="display_discount" class="text-right" width="10%">Disc.(%)</th>
+                                <th class="text-right" width="10%">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="serialnos" t-value="{}"/>
+                            <tr t-foreach="o.order_line" t-as="l">
+                                <t t-set="line_count" t-value="line_count + 1"/>
+
+                                <td><span t-field="l.product_id.default_code"/></td>
+                                <!-- <td>
+                                    <t t-esc="l.get_serial_numbers(l)"/>
+                                </td> -->
+                                <td>
+                                    <span t-field="l.name"/>
+                                    <t t-if="o.company_id.country_id.code == 'ES'">
+                                        <t t-if="l.product_id.weight">
+                                            <br/>[Net Weight Each: <span t-field="l.product_id.weight"/> kg]
+                                        </t>
+                                        <t t-if="l.product_id.hs_code">
+                                            <br/>[HS Code: <span t-field="l.product_id.hs_code"/>]
+                                        </t>
+                                        <!-- <t t-if="o.show_country_origin == True and l.product_id.country_origin">
+                                            <br/>[Country of Origin: <span t-field="l.product_id.country_origin"/>]
+                                        </t> -->
+                                        <t t-if="l.product_id.country_origin">
+                                            <br/>[Country of Origin: <span t-field="l.product_id.country_origin"/>]
+                                        </t>
+                                    </t>
+                                </td>
+                                <td><span t-field="l.notes"/></td>
+                                <td class="text-right">
+                                    <span t-esc="int(float(l.product_uom_qty))"/>
+                                </td>
+                                <td class="text-right">
+                                    <span t-field="l.product_uom" groups="product.group_uom"/>
+                                </td>
+                                <td class="text-right">
+                                    <span t-field="l.price_unit" />
+                                </td>
+                                <td t-if="display_discount" class="text-right">
+                                    <span t-field="l.discount"/>
+                                </td>
+                                <td class="text-right">
+                                    <span t-field="l.price_subtotal" t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="row">
+                        <div class="col-xs-4 pull-right">
+                            <table class="table table-condensed" style="font-size: 12px">
+                                <tr class="border-black">
+                                    <td><strong>Net Total</strong></td>
+                                    <td class="text-right">
+                                        <span t-field="o.amount_untaxed" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="o._get_tax_amount_by_group()" t-as="amount_by_group">
+                                    <tr>
+                                        <td>
+                                            <span t-esc="amount_by_group[0] or 'Taxes'"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-esc="amount_by_group[1]" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.pricelist_id.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr class="border-black">
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-right">
+                                         <span t-field="o.amount_total" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <t t-set="bank" t-value="False"/>
+                    <t t-if="o.partner_bank_id">
+                        <t t-set="bank" t-value="o.partner_bank_id"/>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="o.company_id.bank_ids" t-as="bank_account">
+                            <t t-if="bank_account.currency_id == o.currency_id">
+                                <t t-set="bank" t-value="bank_account"/>
+                            </t>
+                        </t>
+                    </t>
+
+                    <br/>
+                    <br/>
+
+                    <div class="row" style="page-break-inside: avoid;">
+                            <table style="border:none;font-size:11px;" >
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Account Name
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.partner_id.name"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Account No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.acc_number"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Bank
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.bank_name" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" valign="top" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Bank Address
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : 
+                                        <t t-if="bank">
+                                            <!-- <span class="dontsplit" t-field="bank.street"/><br/>&#160;<span class="dontsplit" t-field="bank.zip"/> <span class="dontsplit" t-field="bank.city"/> <span class="dontsplit" t-field="bank.state_id.name"/> <span class="dontsplit" t-field="bank.country_id.name"/> -->
+                                            <span class="dontsplit" t-field="bank.bank_id.street"/><br/>&#160;<span class="dontsplit" t-field="bank.bank_id.zip"/> <span class="dontsplit" t-field="bank.bank_id.city"/> <span class="dontsplit" t-field="bank.bank_id.state.name"/> <span class="dontsplit" t-field="bank.bank_id.country.name"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            SWIFT Code / BIC
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.bank_bic"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            <t t-if="o.company_id.country_id.code == 'US'">
+                                                EIN
+                                            </t>
+                                            <t t-else="">
+                                                Our VAT No.
+                                            </t>
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.company_id.partner_id.vat"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Customer VAT No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.partner_id.vat"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        Company Reg No
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.company_id.company_registry"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" colspan="2">
+                                        <span class="dontsplit">
+                                            <br /><span class="uppercase" t-field="o.company_id.name"/> TERMS AND CONDITIONS APPLY AND ARE AVAILABLE ON REQUEST.
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr style="font-size: 11px">
+                                    <td class="noborder" colspan="2">
+                                        <span class="dontsplit">
+                                            <span class="sfontsize" t-field="o.note"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                        </div>
+
+                    <!-- <t t-if="line_count > 10">
+                        <br/>
+                        <table style="border:none;font-size:11px;" >
+                                
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Account Name
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.owner_name"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Account No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.acc_number"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Bank
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.bank_name" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" valign="top" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Bank Address
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : 
+                                        <t t-if="bank"><span class="dontsplit" t-field="bank.street"/><br/>&#160;<span class="dontsplit" t-field="bank.zip"/> <span class="dontsplit" t-field="bank.city"/> <span class="dontsplit" t-field="bank.state_id.name"/> <span class="dontsplit" t-field="bank.country_id.name"/></t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            SWIFT Code / BIC
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.bank_bic"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Our VAT No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.company_id.partner_id.vat"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Customer VAT No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.partner_id.vat"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        Company Reg No
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.company_id.company_registry"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" colspan="2">
+                                        <span class="dontsplit">
+                                            <br /><span class="uppercase" t-field="o.company_id.name"/> TERMS AND CONDITIONS APPLY AND ARE AVAILABLE ON REQUEST.
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr style="font-size: 11px">
+                                    <td class="noborder" colspan="2">
+                                        <span class="dontsplit">
+                                            <span class="sfontsize" t-field="o.note"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                        </table>
+                    </t>
+
+                    <t t-else="">
+                        <div style="position:absolute;top:900px; page-break-inside: avoid;">
+                            <table style="border:none;font-size:11px;" >
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Account Name
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.owner_name"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Account No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.acc_number"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Bank
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.bank_name" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" valign="top" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Bank Address
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : 
+                                        <t t-if="bank"><span class="dontsplit" t-field="bank.street"/><br/>&#160;<span class="dontsplit" t-field="bank.zip"/> <span class="dontsplit" t-field="bank.city"/> <span class="dontsplit" t-field="bank.state_id.name"/> <span class="dontsplit" t-field="bank.country_id.name"/></t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            SWIFT Code / BIC
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-if="bank" t-field="bank.bank_bic"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Our VAT No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.company_id.partner_id.vat"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        <span class="dontsplit">
+                                            Customer VAT No.
+                                        </span>
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.partner_id.vat"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        Company Reg No
+                                    </td>
+                                    <td class="noborder" style="padding-bottom:0.10em;">
+                                        : <span class="dontsplit" t-field="o.company_id.company_registry"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="noborder" colspan="2">
+                                        <span class="dontsplit">
+                                            <br /><span class="uppercase" t-field="o.company_id.name"/> TERMS AND CONDITIONS APPLY AND ARE AVAILABLE ON REQUEST.
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr style="font-size: 11px">
+                                    <td class="noborder" colspan="2">
+                                        <span class="dontsplit">
+                                            <span class="sfontsize" t-field="o.note"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </t> -->
+
+                </div>
+            </t>
+
+        </template>
+
+        <template id="report_invoice_proforma">
+            <t t-call="report.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="innosen_custom.report_invoice_proforma_document" t-lang="o.partner_id.lang"/>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>
+
+
+

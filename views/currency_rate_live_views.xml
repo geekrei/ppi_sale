@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_currency_form_extend" model="ir.ui.view">
+            <field name="name">res.currency.form.extend</field>
+            <field name="model">res.currency</field>
+            <field name="inherit_id" ref="base.view_currency_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//form/header" position="inside">
+                    <!-- <button name="update_date" type="object" string="Update Dates" groups="base.group_no_one" class="btn-danger"/> -->
+                    <button name="update_rate" type="object" string="Update Rates" groups="base.group_no_one" class="btn-danger"/>
+                </xpath>
+                <field name="rate" position="after">
+                    <field name="base" groups="base.group_no_one"/>
+                </field>
+            </field>
+        </record>
+
+        <!-- <record id="view_company_form_extend" model="ir.ui.view">
+            <field name="name">res.company.form.extend</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form" />
+            <field name="arch" type="xml">
+                <field name="currency_id" position="after">
+                    <field name="multi_company_currency_enable" groups="base.group_no_one"/>
+                </field>
+            </field>
+        </record> -->
+
+    </data>
+</odoo>

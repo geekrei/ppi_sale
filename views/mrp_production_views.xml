@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="mrp_production_view_extend" model="ir.ui.view">
+			<field name="name">mrp.production.extend</field>
+			<field name="model">mrp.production</field>
+			<field name="inherit_id" ref="mrp.mrp_production_form_view" />
+			<field name="arch" type="xml">
+
+				<!-- <xpath expr="//form/header/button[@name='post_inventory']" position="attributes">
+					<attribute name="invisible">1</attribute>
+				</xpath> -->
+
+				<!-- UTILITY TO REVERSE POST MOVES WITHOUT COMPLETION OF WO FIRST AND/OR SOME COMPONENTS ARE NOT AVAILABLE -->
+				<xpath expr="//form/header" position="inside">
+					<!-- <button name="unpost_inventory" string="Unpost Inventory" type="object" groups="base.group_no_one" attrs="{'invisible': [('state', '=', 'done')]}"/> -->
+					<button name="reset_order" string="RESET ORDER" type="object" groups="base.group_no_one" class="btn-danger" />
+					
+					<button name="update_waiting" string="UPDATE WAITING" type="object" groups="base.group_no_one" class="btn-danger" />
+
+					<button name="print_production_barcodes" string="Print Production Barcodes" type="object"  />
+				</xpath>
+
+			</field>
+		</record>
+	</data>
+</odoo>

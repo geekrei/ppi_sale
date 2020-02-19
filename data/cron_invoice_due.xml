@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<odoo>
+    <data>
+        <record id="vendo_bill__due_notification" model="mail.message.subtype">
+            <field name="name">Vendor Bill Due Notification</field>
+        </record>
+
+        <record model="ir.cron" id="ir_cron_invoice_due_notification">
+            <field name="name">Vendor Bill Due Notification</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field><!-- it s every day -->
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="model" eval="'account.invoice'"/>
+            <field name="function" eval="'alert_bill_due'"/>
+            <field name="args">(5,)</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates id="template" xml:space="preserve">
+
+	<t t-extend="main_menu">
+		<t t-jquery=".o_stock_barcode_main_menu p" t-operation="replace">
+			<p>
+				Scan a location to create a new transfer from this location.<br/>
+				Scan a document to open it. <br/>
+				Print the barcode commands. <a href="/stock_barcode/static/description/barcodes_actions.pdf" class="fa fa-download" target="_blank"/>
+			</p>
+		</t>
+	</t>
+
+</templates>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="partner_pricelist_update_view" model="ir.ui.view">
+        <field name="name">Partner Pricelist Update</field>
+        <field name="model">partner.pricelist.update</field>
+        <field name="arch" type="xml">
+            <form string="Partner Pricelist">
+                <group>
+                    <field name="parent_ids" />
+                </group>
+                <footer>
+                    <button name="apply" string="Apply" type="object" default_focus="1" class="oe_highlight"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="partner_pricelist_update_action" model="ir.actions.act_window">
+        <field name="name">Partner Pricelist Update</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">partner.pricelist.update</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="partner_pricelist_update_view"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem name="Partner Pricelist Update"
+        id="partner_pricelist_update"
+        sequence="100"
+        parent="contacts.menu_contacts"
+        action="partner_pricelist_update_action"
+        groups="base.group_no_one"/>
+
+</data>
+</odoo>

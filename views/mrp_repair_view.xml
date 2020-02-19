@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="view_repair_order_form_extend" model="ir.ui.view">
+			<field name="name">mrp.repair.form.extend</field>
+			<field name="model">mrp.repair</field>
+			<field name="inherit_id" ref="mrp_repair.view_repair_order_form" />
+			<field name="arch" type="xml">
+				<!-- <field name="guarantee_limit" position="after">
+					<field name="reference"/>
+				</field> -->
+				<xpath expr="//notebook/page[3]" position="attributes">
+                    <attribute name="groups"></attribute>
+                </xpath>
+                <xpath expr="//notebook/page[3]/group[1]/group[1]" position="inside">
+                	<field name="sale_id"/>
+					<field name="picking_id"/>
+				</xpath>
+                <xpath expr="//notebook/page[3]/group[1]/group[2]" position="inside">
+					<field name="deliver_bool"/>
+				</xpath>
+			</field>
+		</record>
+	</data>
+</odoo>

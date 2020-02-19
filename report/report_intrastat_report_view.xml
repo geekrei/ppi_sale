@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		
+        <record id="view_report_intrastat_tree_extend" model="ir.ui.view">
+            <field name="name">report.intrastat.view.extend</field>
+            <field name="model">report.intrastat</field>
+            <field name="inherit_id" ref="report_intrastat.view_report_intrastat_tree" />
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="replace">
+                    <tree string="Intrastat Data" create="false">
+                        <field name="name" />
+                        <field name="month"/>
+                        <field name="code" />
+                        <field name="ref"/>
+                        <field name="supply_units"/>
+                        <field name="weight"/>
+                        <field name="currency_id" groups="base.group_multi_currency"/>
+                        <field name="value"/>
+                        <field name="euro_value" />                    
+                        <field name="intrastat_id"/>
+                        <field name="province" />
+                        <field name="delivery_term"/>
+                        <field name="type_transaction"/>
+                        <field name="transport_method"/>
+                        <field name="hs_code"/>
+                        <field name="stat_regime"/>
+                        <field name="type"/>
+	                </tree>
+                </xpath>    
+            </field>
+        </record>
+
+	</data>
+</odoo>

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_invoice_shipping_document">
+            <t t-call="innosen_custom.external_layout_invoice">
+                <t t-set="o" t-value="o.with_context({'lang':o.partner_id.lang})" />
+                <div class="page">
+                    <table class="list_table" style="border:none;font-size: 12px" width="100%">
+                        <tr>
+                            <td class="noborder" width="46%">
+                                <img t-if="o.company_id.logo" t-att-src="'data:image/png;base64,%s' %o.company_id.logo" height="65" width="240"/>
+                            </td>
+                            <td class="noborder" width="8%"></td>
+                            <td class="noborder" align="right" width="46%" style="vertical-align: top;">
+                                <h2><span>SHIPPING INVOICE</span></h2>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="noborder" valign="top" width="46%">
+                                <br/>
+                                <span class="uppercase" t-field="o.company_id.name"/><br />
+                                <span t-field="o.company_id.street"/><br />
+                                <span t-field="o.company_id.street2"/> <span t-field="o.company_id.zip"/> <span t-field="o.company_id.city"/>, <span t-field="o.company_id.country_id.name"/>
+                                <br />
+                                <t t-if="o.company_id.phone">Tel No.:  <span t-field="o.company_id.phone"/><br /></t>
+                                <t t-if="o.company_id.fax">Fax No.: <span t-field="o.company_id.fax"/><br /></t>
+                                <t t-if="o.company_id.email">Email: <span t-field="o.company_id.email"/><br /></t>
+                                <t t-if="o.company_id.vat">VAT: <span t-field="o.company_id.vat"/><br /></t>
+                            </td>
+                            <td class="noborder" width="8%">
+                            </td>
+                            <td class="noborder" width="46%">
+                                <table class="inner_table">
+                                    <tr>
+                                        <td>DATE &#160;&#160;&#160;</td>
+                                        <td>: &#160;<span t-field="o.date_invoice" t-options='{"format": "yyyy-MM-dd"}'/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>PAYMENT TERMS &#160;&#160;&#160;</td>
+                                        <td>: &#160;<span t-field="o.payment_term_id"/></td>                        
+                                    </tr>   
+                                    <tr>
+                                        <td>P.O. REF &#160;&#160;&#160;</td>
+                                        <td>: &#160;<span t-esc="o.get_customer_ref()"/></td>
+                                    </tr>
+                                    <!-- <tr>
+                                        <td><b>
+                                            <span t-if="o.type not in ('out_refund', 'in_refund')">
+                                                INVOICE NO.
+                                            </span>
+                                        </b> &#160;&#160;&#160;</td>
+                                        <td><b>: &#160;<span t-field="o.number"/></b></td>
+                                    </tr> -->  
+                                </table>
+                            </td>
+                        </tr>
+                        <tr><td><br/></td></tr>
+                        <tr>
+                            <td style="border-style:solid;border-color:#808080;border-width:1px 1px 0px 1px;padding-left:0.5em;padding-top:0.5em;padding-right:0.5em;padding-bottom:0.5em;" >
+                                <b>SHIP FROM:</b>
+                            </td>
+                            <td class="noborder" >
+                            </td>
+                            <td style="border-style:solid;border-color:#808080;border-width:1px 1px 0px 1px;padding-left:0.5em;padding-top:0.5em;padding-right:0.5em;padding-bottom:0.5em;" >
+                                <b>SHIP TO:</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border-style:solid; border-color:#808080;border-width:0px 1px 1px 1px;padding-left:1.5em;padding-top:0.10em;" valign="top">
+                                <t t-if="o.partner_shipping_by_id">                 
+                                    <span class="uppercase">
+                                        <b>
+                                            <span t-field="o.partner_shipping_by_id"/>
+                                        </b><br />
+                                    </span>
+                                    <address t-field="o.partner_shipping_by_id"
+                                    t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}' />
+                                </t>
+                                <t t-else="">
+                                    <span class="uppercase">
+                                        <b>
+                                            <span t-field="o.company_id.partner_id"/>
+                                        </b><br />
+                                    </span>
+                                    <address t-field="o.company_id.partner_id"
+                                    t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}' />
+                                </t>
+                            </td>
+                            <td class="noborder" >
+                            </td>
+                            <td style="border-style:solid; border-color:#808080;border-width:0px 1px 1px 1px;padding-left:1.5em;padding-top:0.10em;"  valign="top">
+                                <span class="uppercase">
+                                    <b>
+                                        <span t-field="o.partner_shipping_id"/>
+                                    </b><br />
+                                </span>
+                                <address t-field="o.partner_shipping_id"
+                                t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}' />
+                            </td>
+                        </tr>
+                    </table>
+
+                    <br />
+                    <t t-set="display_discount" t-value="any([l.discount for l in o.invoice_line_ids])"/>
+                    <t t-set="line_count" t-value="0"/>
+                    
+                    <table class="table table-condensed" style="font-size: 12px">
+                        <thead>
+                            <th width="15%">
+                                Product Code
+                            </th>
+                            <th width="15%">
+                                Serial No.
+                            </th>
+                            <th>
+                                Description
+                            </th>
+                            <th>
+                                Notes
+                            </th>
+                            <th width="8%">
+                                Qty
+                            </th>
+                            <th width="4%">
+                                UOM
+                            </th>
+                            <th width="12%" class="text-right">
+                                Net Each
+                            </th>
+                            <th width="15%" class="text-right">
+                                Price
+                            </th>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.invoice_line_ids" t-as="l">
+                                <t t-set="line_count" t-value="line_count + 1"/>
+                                <t t-if="l.product_id.type != 'service'">
+                                    <td><span t-field="l.product_id.default_code"/></td>
+                                    <td><t t-esc="l.get_serial_numbers(l)"/></td>
+                                    <td>
+                                        <t t-set="has_hs_code" t-value="False"/>
+                                        <span t-field="l.name"/>
+                                        <t t-if="o.company_id.country_id.code == 'ES'">
+                                            <t t-if="l.product_id.weight">
+                                                <br/>[Net Weight Each: <span t-field="l.product_id.weight"/> kg]
+                                            </t>
+                                            <t t-if="l.product_id.hs_code">
+                                                <t t-set="has_hs_code" t-value="True"/>
+                                                <br/>[HS Code: <span t-field="l.product_id.hs_code"/>]
+                                            </t>
+                                        </t>
+                                        <!-- COMPANY NOT SLU AND INVOICE TO SLU -->
+                                        <t t-if="o.company_id.country_id.code != 'ES' and o.partner_id.country_id.code == 'ES'">
+                                            <t t-if="l.product_id.hs_code">
+                                                <t t-set="has_hs_code" t-value="True"/>
+                                                <br/>[HS Code: <span t-field="l.product_id.hs_code"/>]
+                                            </t>
+                                        </t>
+                                        <t t-if="not has_hs_code">
+                                            <t t-if="l.product_id.tariff_code">
+                                                <br/>[HS Code: <span t-field="l.product_id.tariff_code"/>]
+                                            </t>
+                                        </t> 
+                                        <t t-if="o.show_country_origin == True and l.product_id.country_origin">
+                                            <br/>[Country of Origin: <span t-field="l.product_id.country_origin"/>]
+                                        </t>
+                                    </td>
+                                    <td><span t-field="l.notes"/></td>
+                                    <td>
+                                        <span t-esc="int(float(l.quantity))"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="l.uom_id"  groups="product.group_uom"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-if="display_discount">
+                                            <t t-set="price_unit" t-value="(l.price_unit)*(100.0-l.discount)/100"/>
+                                            <span t-esc="price_unit" t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                        </t>
+                                        <t t-else="">
+                                            <span t-field="l.price_unit" t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                        </t>
+                                    </td>
+                                    <td class="text-right">
+                                        <span t-field="l.price_subtotal" t-options='{"widget": "monetary", "display_currency": o.currency_id}' />
+                                    </td>
+                                </t>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="row">
+                        <div class="col-xs-4 pull-right">
+                            <table class="table table-condensed" style="font-size: 12px">
+                                <tr class="border-black">
+                                    <td><strong>Net Total</strong></td>
+                                    <td class="text-right">
+                                        <span t-field="o.amount_untaxed" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="o._get_tax_amount_by_group()" t-as="amount_by_group">
+                                    <tr>
+                                        <td><span t-esc="amount_by_group[0] if len(o.tax_line_ids) > 1 else (o.tax_line_ids.tax_id.description or o.tax_line_ids.tax_id.name)"/></td>
+                                        <td class="text-right">
+                                            <span t-esc="amount_by_group[2]"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr class="border-black">
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-right">
+                                         <span t-field="o.amount_total" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <br/>
+                    <br/>
+
+                    <p t-if="o.comment" style="font-size: 12px">
+                        <span><b>Notes</b></span><br/>
+                        <span t-field="o.comment"/>
+                    </p>
+
+                    <br/>
+                    <br/>
+
+                    <!-- <t t-if="line_count > 10">
+                        <br />
+                        <p style="font-size:11px;">
+                            <span class="dontsplit">
+                                <t t-if="o.partner_id.lang == 'zh_CN'">
+                                    我们证明该发票上显示商品总价和原产地。
+                                </t>
+                                <t t-elif="o.partner_id.lang == 'fr_FR'">
+                                    WE CERTIFY THAT THIS INVOICE SHOWS<br />
+                                    THE FULL VALUE AND ORIGIN OF THE GOODS.
+                                </t>
+                                <t t-else="">
+                                    WE CERTIFY THAT THIS INVOICE SHOWS<br />
+                                    THE FULL VALUE AND ORIGIN OF THE GOODS.
+                                </t>
+                            </span>
+                        </p>
+                        <p style="font-size:11px;">
+                            <span class="dontsplit">
+                                Our terms &amp; conditions of sale apply, copy available on request.
+                            </span>
+                        </p>    
+                        <p style="font-size:11px;">
+                            <span class="dontsplit">
+                                Customer VAT No. : <span t-field="o.partner_id.vat"/><br />
+                                Company Reg No. : <span t-field="o.company_id.company_registry"/>
+                            </span>
+                        </p>
+                    </t>
+
+                    <t t-else="">
+                        <div style="position:absolute;top:900px; page-break-inside: avoid;">
+                            <p style="font-size:11px;">
+                                <span class="dontsplit">
+                                    <t t-if="o.partner_id.lang == 'zh_CN'">
+                                        我们证明该发票上显示商品总价和原产地。
+                                    </t>
+                                    <t t-elif="o.partner_id.lang == 'fr_FR'">
+                                        WE CERTIFY THAT THIS INVOICE SHOWS<br />
+                                        THE FULL VALUE AND ORIGIN OF THE GOODS.
+                                    </t>
+                                    <t t-else="">
+                                        WE CERTIFY THAT THIS INVOICE SHOWS<br />
+                                        THE FULL VALUE AND ORIGIN OF THE GOODS.
+                                    </t>
+                                </span>
+                            </p>
+                            <p style="font-size:11px;">
+                                <span class="dontsplit">
+                                    Our terms &amp; conditions of sale apply, copy available on request.
+                                </span>
+                            </p>    
+                            <p style="font-size:11px;">
+                                <span class="dontsplit">
+                                    Customer VAT No. : <span t-field="o.partner_id.vat"/><br />
+                                    Company Reg No. : <span t-field="o.company_id.company_registry"/>
+                                </span>
+                            </p>
+                        </div>
+                    </t> -->
+
+                    <div class="row" style="page-break-inside: avoid;">
+                            <p style="font-size:11px;">
+                                <span class="dontsplit">
+                                    <t t-if="o.partner_id.lang == 'zh_CN'">
+                                        我们证明该发票上显示商品总价和原产地。
+                                    </t>
+                                    <t t-elif="o.partner_id.lang == 'fr_FR'">
+                                        WE CERTIFY THAT THIS INVOICE SHOWS<br />
+                                        THE FULL VALUE AND ORIGIN OF THE GOODS.
+                                    </t>
+                                    <t t-else="">
+                                        WE CERTIFY THAT THIS INVOICE SHOWS<br />
+                                        THE FULL VALUE AND ORIGIN OF THE GOODS.
+                                    </t>
+                                </span>
+                            </p>
+                            <p style="font-size:11px;">
+                                <span class="dontsplit">
+                                    Our terms &amp; conditions of sale apply, copy available on request.
+                                </span>
+                            </p>    
+                            <p style="font-size:11px;">
+                                <span class="dontsplit">
+                                    Customer VAT No. : <span t-field="o.partner_id.vat"/><br />
+                                    Company Reg No. : <span t-field="o.company_id.company_registry"/>
+                                </span>
+                            </p>
+                        </div>
+
+                </div>
+            </t>
+        </template>
+
+        <template id="report_invoice_shipping">
+            <t t-call="report.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="innosen_custom.report_invoice_shipping_document" t-lang="o.partner_id.lang"/>
+                </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>

@@ -1,27 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        
+
+        <!-- START: update product company property defaults -->
         <record id="product_template_form_view_extend" model="ir.ui.view">
             <field name="name">product.template.common.form.extend</field>
             <field name="model">product.template</field>
             <field name="inherit_id" ref="product.product_template_form_view" />
             <field name="arch" type="xml">
-
-                <xpath expr="//field[@name='list_price']" position="before">
-                    <field name="thickness"/>
-                    <field name="bmt"/>
-                    <field name="nom_width"/>
-                    <field name="feed_coil"/>
-                    <field name="m_length"/>
-                    <field name="coating_mass"/>
-                    <field name="color"/>
-                    <field name="fh_cq"/>
-                    <field name="price_lm"/>
+                <xpath expr="//header" position="inside">
+                    <button name="button_update_product_company_property_defaults" type="object" string="UPDATE PRODUCT DEFAULTS" groups="base.group_no_one" class="btn-danger"/>
                 </xpath>
+                <!-- UNCOMMENT ON INSTALL TO OTHER DB -->
+                <!-- <xpath expr="//field[@name='tariff_code']" position="after">
+                    <field name="country_origin"/>
+                </xpath> -->
 
+                <xpath expr="//page[@name='general_information']/group[1]" position="after">
+                    <group>
+                        <group name="extra_info" string="Extra Info">
+                            <field name="compliance_rohs"/>
+                            <field name="compliance_ce"/>
+                        </group>
+                    </group>
+                </xpath>
             </field>
-        </record> 
+        </record>
+        <!-- END: update product company property defaults -->
+        
+        <record id="view_product_template_search_child_categories" model="ir.ui.view">
+            <field name="name">product.template.search.categories</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_search_view" />
+            <field name="arch" type="xml">
+                <field name="categ_id" position="attributes">
+                    <attribute name="operator">child_of</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_template_property_form_inherit" model="ir.ui.view">
+            <field name="name">product.template.property.form.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="stock_account.view_template_property_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='property_cost_method']" position="attributes">
+                    <attribute name="invisible">False</attribute>
+                </xpath>
+                <xpath expr="//field[@name='property_valuation']" position="attributes">
+                   <attribute name="invisible">False</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- HIDE ANALYTIC BUTTONS -->
+        <record id="product_form_view_default_analytic_button_extend" model="ir.ui.view">
+            <field name="name">product.product.inherit.rules_count.extend</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="account_analytic_default.product_form_view_default_analytic_button"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@class='oe_stat_button']" position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="product_template_view_default_analytic_button_extend" model="ir.ui.view">
+            <field name="name">product.template.inherit.rules_count.extend</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="account_analytic_default.product_template_view_default_analytic_button"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_view_rules']" position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="product_form_view_procurement_button_extend" model="ir.ui.view">
+            <field name="name">product.product.procurement.extend</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock.product_form_view_procurement_button"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_view_routes']" position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="product_template_form_view_procurement_button_extend" model="ir.ui.view">
+            <field name="name">product.template.procurement.extend</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="stock.product_template_form_view_procurement_button"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_view_routes']" position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- EXTEND: PRODUCT PURCHASING ACTION ACTION TO ADD DOMAIN / UNCOMMENT ON DEPLOYEMNT -->
+        <record model="ir.actions.act_window" id="action_purchase_line_product_product_tree">
+            <field name="context">{}</field>
+            <field name="domain">[('product_id','in',active_ids), ('state', 'in', ['purchase', 'done'])]</field>
+            <field name="name">Purchases</field>
+            <field name="res_model">purchase.order.line</field>
+            <field name="view_id" ref="purchase.purchase_order_line_tree"/>
+        </record>
+
+        <!-- SHOW BUTTONS: BOM LINES / PURCHASES / UNCOMMENT -->
+        <record id="product_product_form_view_bom_button" model="ir.ui.view">
+            <field name="name">product.product.procurement</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="groups_id" eval="[(4, ref('mrp.group_mrp_user'))]"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@name='button_box']/button[6]" position="after">
+                    <button class="oe_stat_button" name="%(sale.action_product_sale_list)d" type="action" icon="fa-usd">
+                        <field string="Sales" name="sales_count" widget="statinfo" />
+                    </button>
+                    <button class="oe_stat_button" name="%(mrp.act_product_mrp_production)d" type="action" attrs="{'invisible':[('type', 'not in', ['product', 'consu'])]}" icon="fa-list-alt">
+                        <field string="Manufacturing" name="mo_count" widget="statinfo" />
+                    </button>
+                    <button class="oe_stat_button" name="action_view_bom" type="object" attrs="{'invisible':[('type', 'not in', ['product', 'consu'])]}" icon="fa-flask">
+                        <field string="Bill of Materials" name="bom_count" widget="statinfo" />
+                    </button>
+                    <button class="oe_stat_button" name="action_view_bomlines" type="object" attrs="{'invisible':[('type', 'not in', ['product', 'consu'])]}" icon="fa-flask">
+                        <field string="BOM Lines" name="bomline_count" widget="statinfo" />
+                    </button>
+                    <button class="oe_stat_button" name="%(innosen_custom.action_purchase_line_product_product_tree)d" type="action" icon="fa-shopping-cart">
+                       <field string="Purchases" name="purchase_count" widget="statinfo"/>
+                   </button>
+                </xpath>
+                <xpath expr="//notebook" position="inside">
+                    <page name="stock_rule" string="Stock Rule">
+                        <field name="orderpoint_ids" context="{'default_product_id': active_id}"/>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="product_template_account_form_view_extend" model="ir.ui.view">
+            <field name="name">product.template.account.form.extend</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="account.product_template_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='invoicing']" position="attributes">
+                    <attribute name="groups">account.group_account_invoice,innosen_custom.group_account_office_assistant</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- <record id="product_normal_form_view_extend" model="ir.ui.view">
+            <field name="name">product.product.form.extend</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="button_update_product_company_property_defaults" type="object" string="UPDATE PRODUCT DEFAULTS" groups="base.group_no_one" class="btn-danger"/>
+                </xpath>
+            </field>
+        </record> -->
 
     </data>
 </odoo>

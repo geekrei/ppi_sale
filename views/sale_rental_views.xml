@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="sale_rental_tree_extend" model="ir.ui.view">
+			<field name="name">sale.rental.tree.extend</field>
+			<field name="model">sale.rental</field>
+			<field name="inherit_id" ref="sale_rental.sale_rental_tree" />
+			<field name="arch" type="xml">
+
+				<xpath expr="//field[@name='rented_product_id']" position="after">
+					<field name="lot_ids"/>
+				</xpath>
+
+			</field>
+		</record>
+
+		<record id="sale_rental_form_extend" model="ir.ui.view">
+			<field name="name">sale.rental.form.extend</field>
+			<field name="model">sale.rental</field>
+			<field name="inherit_id" ref="sale_rental.sale_rental_form" />
+			<field name="arch" type="xml">
+
+				<xpath expr="//header" position="inside">
+					<!-- <button name="button_compute_procurement_and_move" string="COMPUTE MOVE" type="object" groups="base.group_no_one" class="btn-danger" /> -->
+					<button name="button_compute_procurement_and_move" string="COMPUTE MOVE" type="object" class="btn-danger" />
+				</xpath>
+
+				<xpath expr="//field[@name='out_picking_id']" position="after">
+					<field name="lot_ids" widget="many2many_tags"/>
+				</xpath>
+
+			</field>
+		</record>
+	</data>
+</odoo>

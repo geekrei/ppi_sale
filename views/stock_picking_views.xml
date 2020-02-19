@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="view_picking_form_extend" model="ir.ui.view">
+			<field name="name">stock.picking.form.extend</field>
+			<field name="model">stock.picking</field>
+			<field name="inherit_id" ref="stock.view_picking_form" />
+			<field name="arch" type="xml">
+				<xpath expr="//form/header" position="inside">
+					<button name="update_move_location" type="object" string="Update Move Location" attrs="{'invisible': ['|',('state', '=', 'done'),('move_lines', '=', [])]}" help="Functionality to use for updating location of operation moves when products were already assigned/reserved."/>
+					<button name="button_compute_weight" type="object" string="Compute Weight" attrs="{'invisible': [('move_lines', '=', [])]}" help="DEV TOOL TO COMPUTE WEIGHT" groups="base.group_no_one" class="btn-danger"/>
+					<button name="button_reserve_waiting_move" type="object" string="Update Waiting" attrs="{'invisible': ['|',('state', '=', 'done'),('move_lines', '=', [])]}" help="DEV TOOL TO UPDATE MOVES (WITH STATUS WAITING ANOTHER MOVE)" groups="base.group_no_one" class="btn-danger"/>
+				</xpath>
+				<!-- <xpath expr="//field[@name='priority']" position="after">
+					<field name="show_country_origin"/>
+				</xpath> -->
+				<xpath expr="//field[@name='move_lines']" position="inside">
+					<tree>
+						<field name="product_id"/>
+						<field name="product_uom_qty"/>
+						<field name="product_uom"/>
+						<field name="state"/>
+						<!-- <field name="note"/> -->
+					</tree>
+				</xpath>
+				<xpath expr="//field[@name='pack_operation_product_ids']/tree/field[@name='qty_done']" position="after">
+					<field name="note"/>
+				</xpath>
+				<xpath expr="//field[@name='pack_operation_product_ids']/kanban/field[@name='qty_done']" position="after">
+					<field name="note"/>
+				</xpath>
+				<xpath expr="//field[@name='pack_operation_pack_ids']/tree/field[@name='qty_done']" position="after">
+					<field name="note"/>
+				</xpath>
+			</field>
+		</record>
+
+		<!-- PICKING / MOVE -->
+		<!-- <record id="view_move_picking_formextend" model="ir.ui.view">
+			<field name="name">stock.move.picking.form.extend</field>
+			<field name="model">stock.move</field>
+			<field name="inherit_id" ref="stock.view_move_picking_form" />
+			<field name="arch" type="xml">
+				<xpath expr="//form/group[2]" position="after">
+					<group>
+						<group string="Notes">
+							<field name="note"/>
+						</group>
+					</group>
+				</xpath>
+			</field>
+		</record> -->
+
+	</data>
+</odoo>
